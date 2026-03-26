@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  min-height: 580px;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
+    Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  background: #0a0a0a;
+  color: #e5e5e5;
+}
+
+/* Dark subtle gradient background */
+.bg-dark-gradient {
+  background: linear-gradient(180deg, #111111 0%, #0a0a0a 100%);
+}
+
+/* Dark glass card */
+.glass-dark {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-dark:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Accent glass card (for streak) */
+.glass-accent {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(234, 88, 12, 0.04));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(249, 115, 22, 0.12);
+}
+
+/* Premium toggle */
+.toggle-track {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.toggle-track.active {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.3);
+}
+
+.toggle-track.inactive {
+  background: #333;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-track.active .toggle-thumb {
+  transform: translateX(24px);
+}
+
+.toggle-track.inactive .toggle-thumb {
+  transform: translateX(2px);
+}
+
+/* Flame breathing */
+@keyframes flameBreath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+.flame-breath {
+  animation: flameBreath 2.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* Count up */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-animate {
+  animation: countUp 0.4s ease-out;
+}
+
+/* Quote fade */
+@keyframes quoteFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.quote-fade {
+  animation: quoteFade 0.5s ease-out;
+}
+
+/* Status pulse */
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-pulse {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Subtle transition on cards */
+.card-hover {
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-1px);
+}

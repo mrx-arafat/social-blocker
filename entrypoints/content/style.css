@@ -1,0 +1,23 @@
+/*
+ * CSS-based blocking — first line of defense.
+ * Injected immediately to hide Reels elements before they render.
+ * Uses !important to override Instagram's inline styles.
+ */
+
+/* Hide Reels navigation links in sidebar/bottom nav */
+a[href*="/reels"],
+a[href*="/reels/"] {
+  display: none !important;
+}
+
+/* Hide individual reel links in feed */
+a[href*="/reel/"] {
+  display: none !important;
+}
+
+/* When the extension adds this class, restore visibility (toggle off) */
+.social-blocker-disabled a[href*="/reels"],
+.social-blocker-disabled a[href*="/reels/"],
+.social-blocker-disabled a[href*="/reel/"] {
+  display: unset !important;
+}
