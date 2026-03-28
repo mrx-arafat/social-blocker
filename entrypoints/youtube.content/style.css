@@ -1,0 +1,41 @@
+/*
+ * CSS-based blocking — first line of defense for YouTube Shorts.
+ * Injected immediately to hide Shorts elements before they render.
+ * Uses !important to override YouTube's inline styles.
+ */
+
+/* Hide Shorts links in navigation and feed */
+a[href="/shorts"],
+a[href^="/shorts/"] {
+  display: none !important;
+}
+
+/* Hide Shorts shelf on homepage */
+ytd-rich-shelf-renderer[is-shorts] {
+  display: none !important;
+}
+
+/* Hide Shorts reel shelf (homepage + search results) */
+ytd-reel-shelf-renderer {
+  display: none !important;
+}
+
+/* Hide Shorts tab in full sidebar */
+ytd-guide-entry-renderer:has(a[title="Shorts"]) {
+  display: none !important;
+}
+
+/* Hide Shorts tab in mini sidebar */
+ytd-mini-guide-entry-renderer:has(a[title="Shorts"]) {
+  display: none !important;
+}
+
+/* When the extension adds this class, restore visibility (toggle off) */
+.social-blocker-disabled a[href="/shorts"],
+.social-blocker-disabled a[href^="/shorts/"],
+.social-blocker-disabled ytd-rich-shelf-renderer[is-shorts],
+.social-blocker-disabled ytd-reel-shelf-renderer,
+.social-blocker-disabled ytd-guide-entry-renderer:has(a[title="Shorts"]),
+.social-blocker-disabled ytd-mini-guide-entry-renderer:has(a[title="Shorts"]) {
+  display: unset !important;
+}

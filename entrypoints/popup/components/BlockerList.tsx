@@ -5,6 +5,46 @@ interface BlockerListProps {
   onToggle: (blockerId: string, enabled: boolean) => void;
 }
 
+function BlockerIcon({ blockerId }: { blockerId: string }) {
+  if (blockerId === "youtube-shorts") {
+    return (
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/10 to-orange-500/10 flex items-center justify-center border border-red-500/10">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ef4444"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
+          <rect x="2" y="2" width="20" height="20" rx="5" />
+          <polygon points="10,8 16,12 10,16" fill="#ef4444" stroke="none" />
+        </svg>
+      </div>
+    );
+  }
+
+  // Default: Instagram Reels icon
+  return (
+    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/10 to-purple-500/10 flex items-center justify-center border border-pink-500/10">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ec4899"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <line x1="18" y1="2" x2="22" y2="6" />
+      </svg>
+    </div>
+  );
+}
+
 export default function BlockerList({
   blockerStates,
   onToggle,
@@ -24,21 +64,7 @@ export default function BlockerList({
           return (
             <div key={blocker.id} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/10 to-purple-500/10 flex items-center justify-center border border-pink-500/10">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#ec4899"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <rect x="2" y="2" width="20" height="20" rx="5" />
-                    <circle cx="12" cy="12" r="4" />
-                    <line x1="18" y1="2" x2="22" y2="6" />
-                  </svg>
-                </div>
+                <BlockerIcon blockerId={blocker.id} />
                 <div>
                   <div className="text-[12px] font-semibold text-neutral-200">
                     {blocker.name}
@@ -67,7 +93,7 @@ export default function BlockerList({
 
       <div className="mt-4 pt-3 border-t border-white/5">
         <span className="text-[10px] text-neutral-700 italic">
-          YouTube Shorts, TikTok — coming soon
+          TikTok — coming soon
         </span>
       </div>
     </div>

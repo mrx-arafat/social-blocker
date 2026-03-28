@@ -1,35 +1,33 @@
 /**
- * Blocker Engine — removes Reels elements from Instagram's DOM.
+ * Blocker Engine — removes Shorts elements from YouTube's DOM.
  *
  * Uses MutationObserver to watch for dynamically added elements
- * (Instagram is a React SPA that renders content dynamically).
+ * (YouTube is an SPA that renders content dynamically via custom web components).
  * CSS handles the first-pass hiding; this handles elements that
  * CSS selectors can't easily target.
  */
 
-import { instagramReelsBlocker } from "@/utils/blockers/instagram-reels";
+import { youtubeShortsBlocker } from "@/utils/blockers/youtube-shorts";
 
 let observer: MutationObserver | null = null;
 let isActive = false;
 let blockedCount = 0;
 let onBlockCallback: (() => void) | null = null;
 
-const REELS_SELECTORS = instagramReelsBlocker.cssSelectors;
+const SHORTS_SELECTORS = youtubeShortsBlocker.cssSelectors;
 
 /**
- * Scan a subtree for Reels elements and hide them.
+ * Scan a subtree for Shorts elements and hide them.
  * Returns the number of elements hidden.
  */
 function scanAndHide(root: Element | Document = document): number {
   let count = 0;
 
-  for (const selector of REELS_SELECTORS) {
+  for (const selector of SHORTS_SELECTORS) {
     const elements = root.querySelectorAll(selector);
     elements.forEach((el) => {
       const htmlEl = el as HTMLElement;
       if (htmlEl.dataset.socialBlockerHidden !== "true") {
-        // Walk up to find the nearest meaningful container
-        // Instagram wraps nav items in containers we should hide
         const container = findBlockableContainer(htmlEl);
         if (container) {
           container.style.display = "none";
@@ -40,45 +38,33 @@ function scanAndHide(root: Element | Document = document): number {
     });
   }
 
-  // Also scan for reels in feed — look for elements containing reel-like content
-  // Instagram feed reels have links to /reel/ inside article-like containers
-  const feedReels = root.querySelectorAll(
-    'article a[href*="/reel/"], div[role="presentation"] a[href*="/reel/"]',
-  );
-  feedReels.forEach((el) => {
-    const article = el.closest("article") || el.closest('[role="presentation"]');
-    if (article) {
-      const htmlArticle = article as HTMLElement;
-      if (htmlArticle.dataset.socialBlockerHidden !== "true") {
-        htmlArticle.style.display = "none";
-        htmlArticle.dataset.socialBlockerHidden = "true";
-        count++;
-      }
-    }
-  });
-
   return count;
 }
 
 /**
  * Find the right container to hide.
- * For nav items, we want to hide the parent <li> or nav item wrapper.
- * For feed items, we want to hide the post container.
+ * For YouTube's custom web components, we target the component itself.
+ * For sidebar items, we hide the guide entry renderer.
  */
 function findBlockableContainer(el: HTMLElement): HTMLElement | null {
-  // For navigation links, hide the closest list item or nav container
-  const navItem =
-    el.closest("li") ||
-    el.closest('[role="listitem"]') ||
-    el.closest('[role="menuitem"]');
-  if (navItem) return navItem as HTMLElement;
+  // For shelf renderers, they are already the top-level container
+  const shelf =
+    el.closest("ytd-rich-shelf-renderer") ||
+    el.closest("ytd-reel-shelf-renderer");
+  if (shelf) return shelf as HTMLElement;
+
+  // For sidebar/guide entries
+  const guideEntry =
+    el.closest("ytd-guide-entry-renderer") ||
+    el.closest("ytd-mini-guide-entry-renderer");
+  if (guideEntry) return guideEntry as HTMLElement;
 
   // For standalone links, just hide the link itself
   return el;
 }
 
 /**
- * Start the MutationObserver to watch for new Reels elements.
+ * Start the MutationObserver to watch for new Shorts elements.
  */
 export function startBlocker(onBlock: () => void): void {
   if (isActive) return;

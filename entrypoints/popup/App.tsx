@@ -83,6 +83,7 @@ export default function App() {
   ): Promise<void> {
     const newBlockers = { ...state!.blockers, [blockerId]: enabled };
     await blockerStatesStorage.setValue(newBlockers);
+    browser.runtime.sendMessage({ type: "TOGGLE_BLOCKER", blockerId, enabled });
     setState((prev) => (prev ? { ...prev, blockers: newBlockers } : prev));
   }
 

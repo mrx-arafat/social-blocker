@@ -11,7 +11,7 @@ export const extensionEnabled = storage.defineItem<boolean>("local:enabled", {
 
 export const blockerStates = storage.defineItem<Record<string, boolean>>(
   "local:blockers",
-  { fallback: { "instagram-reels": true } },
+  { fallback: { "instagram-reels": true, "youtube-shorts": true } },
 );
 
 export const totalBlocks = storage.defineItem<number>("local:totalBlocks", {
