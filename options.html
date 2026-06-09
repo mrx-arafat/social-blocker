@@ -35,6 +35,26 @@
         </div>
         <div class="field">
           <div class="field-text">
+            <label for="escalatePause">Escalating pause</label>
+            <span class="hint">Each reopen of the same site today makes the breath longer. The strongest deterrent.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="escalatePause" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="escalateStep">Added per reopen</label>
+            <span class="hint">Seconds added to the breath for each prior open today.</span>
+          </div>
+          <div class="field-control">
+            <input type="range" id="escalateStep" min="0" max="20" step="1" />
+            <output id="escalateStepOut" class="out">5s</output>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-text">
             <label for="passDurationMin">Re-prompt after</label>
             <span class="hint">Minutes a site stays open before it asks again.</span>
           </div>

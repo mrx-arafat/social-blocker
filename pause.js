@@ -1,4 +1,4 @@
-import { getSettings } from "./src/storage.js";
+import { getSettings, getDayStats } from "./src/storage.js";
 
 const params = new URLSearchParams(location.search);
 const target = params.get("target") || "";
@@ -175,7 +175,22 @@ async function init() {
   el.limitLeaveBtn.addEventListener("click", closeTab);
   el.closeBtn.addEventListener("click", closeTab);
 
-  runBreathing(Math.max(2, settings.pauseSeconds || 8));
+  runBreathing(await breathSeconds(settings));
+}
+
+// Effective breath length, growing with each time you've already opened this
+// site today (escalating friction).
+async function breathSeconds(settings) {
+  const base = Math.max(2, settings.pauseSeconds || 8);
+  if (!settings.escalatePause) return base;
+  const opensToday = (await getDayStats()).opens[domain] || 0;
+  const secs = base + opensToday * (settings.escalateStep || 0);
+  const capped = Math.min(secs, settings.escalateMax || 60);
+  if (opensToday > 0) {
+    el.breatheSub.innerHTML =
+      `Opening <b>${domain}</b> again — breathe a little longer this time.`;
+  }
+  return capped;
 }
 
 init();

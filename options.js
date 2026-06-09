@@ -229,6 +229,8 @@ async function init() {
 
   bindToggle("masterToggle", "enabled");
   bindRange("pauseSeconds", "pauseSecondsOut", "pauseSeconds", "s");
+  bindToggle("escalatePause", "escalatePause");
+  bindRange("escalateStep", "escalateStepOut", "escalateStep", "s");
   bindRange("passDurationMin", "passDurationOut", "passDurationMin", "m");
   bindToggle("requireIntention", "requireIntention");
   bindToggle("showAlternatives", "showAlternatives");

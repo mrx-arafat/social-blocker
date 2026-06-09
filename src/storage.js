@@ -7,8 +7,14 @@ export const STATS_KEY = "sb_stats";
 // A "site" entry: domain + per-site limits. Feed toggles live under `feeds`.
 export const DEFAULTS = {
   enabled: true,
-  // Length of the forced breath, in seconds.
+  // Base length of the forced breath, in seconds.
   pauseSeconds: 8,
+  // Escalating friction: each time you reopen the same site today, the breath
+  // grows. This is the main behavioural lever — repeated opens get tedious, so
+  // the impulse fades without a hard wall that triggers reactance.
+  escalatePause: true,
+  escalateStep: 5, // seconds added per prior open today
+  escalateMax: 60, // cap so it never becomes absurd
   // After a granted pass, how long before the same domain prompts again (minutes).
   passDurationMin: 5,
   // Ask for an intention before continuing.

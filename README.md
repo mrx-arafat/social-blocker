@@ -25,6 +25,12 @@ Visiting a guarded site redirects to a breathing screen:
 2. **"Do you really need it now?"** — the moment of choice.
 3. **Continue** to the site, or **step away**. Both outcomes are tracked.
 
+### Escalating pause (the main deterrent)
+Each time you reopen the same site **today**, the breath gets longer
+(e.g. 8s → 13s → 18s …, capped at 60s). Repeated opens become tedious, so the
+impulse fades on its own — without a hard wall that just provokes you to fight
+or disable the tool. Tunable in settings.
+
 ### Intentions
 Before you can continue, name _why_ you're opening it (pick a chip or add your
 own). Naming the reason kills a surprising number of mindless opens.
