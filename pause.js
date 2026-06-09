@@ -15,6 +15,7 @@ const el = {
   limitPhase: $("#limitPhase"),
   donePhase: $("#donePhase"),
   countdown: $("#countdown"),
+  breatheSub: $("#breatheSub"),
   intentionBlock: $("#intentionBlock"),
   intentionChips: $("#intentionChips"),
   altBlock: $("#altBlock"),
