@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>Social Blocker</title>
+  </head>
+  <body>
+    <header class="pop-head">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">Social Blocker</span>
+      </div>
+      <label class="switch" title="Enable / disable">
+        <input type="checkbox" id="masterToggle" />
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <section class="stat-row">
+      <div class="stat">
+        <div class="stat-num" id="sAttempts">0</div>
+        <div class="stat-label">Caught</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="sDismissed">0</div>
+        <div class="stat-label">Stepped away</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="sRate">0%</div>
+        <div class="stat-label">Resisted</div>
+      </div>
+    </section>
+
+    <p class="today-note" id="todayNote">No interruptions yet today.</p>
+
+    <button id="openOptions" class="pop-btn">Settings &amp; blocked sites</button>
+  </body>
+  <script type="module" src="popup.js"></script>
+</html>

@@ -1,0 +1,36 @@
+/* Feed / infinite-scroll blocking. Rules activate only when the matching
+   class is present on <html>, toggled by feeds.js from user settings.
+   Selectors are best-effort and may need updates as sites change markup. */
+
+/* ---- Instagram Reels ---- */
+html.sb-ig-reels a[href="/reels/"],
+html.sb-ig-reels a[href^="/reels/"],
+html.sb-ig-reels a[href*="/reels/"],
+html.sb-ig-reels svg[aria-label="Reels"],
+html.sb-ig-reels [aria-label="Reels"] {
+  display: none !important;
+}
+
+/* ---- YouTube Shorts ---- */
+html.sb-yt-shorts ytd-rich-shelf-renderer[is-shorts],
+html.sb-yt-shorts ytd-reel-shelf-renderer,
+html.sb-yt-shorts ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
+html.sb-yt-shorts ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html.sb-yt-shorts ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+html.sb-yt-shorts a[title="Shorts"],
+html.sb-yt-shorts grid-shelf-view-model {
+  display: none !important;
+}
+
+/* ---- Facebook Reels ---- */
+html.sb-fb-reels a[href*="/reel/"],
+html.sb-fb-reels a[href*="/reels/"],
+html.sb-fb-reels [aria-label="Reels"],
+html.sb-fb-reels [aria-label="Reels and short videos"] {
+  display: none !important;
+}
+
+/* ---- X (Twitter) "For you" timeline tab ---- */
+html.sb-x-foryou [role="tablist"] > div:first-child {
+  display: none !important;
+}

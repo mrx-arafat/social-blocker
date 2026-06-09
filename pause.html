@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Take a breath…</title>
+    <link rel="stylesheet" href="pause.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <!-- Phase 1: breathing -->
+      <section id="breathePhase" class="phase">
+        <div class="breath-wrap">
+          <div class="breath-ring"></div>
+          <div class="breath-core">
+            <span id="countdown" class="countdown">8</span>
+          </div>
+        </div>
+        <h1 class="title" id="breatheTitle">Take a deep breath…</h1>
+        <p class="subtitle" id="breatheSub">Opening <b id="domainLabel">this site</b></p>
+      </section>
+
+      <!-- Phase 2: choice -->
+      <section id="choicePhase" class="phase hidden">
+        <h1 class="title">Do you really need it now?</h1>
+        <p class="subtitle">You're about to open <b class="domain-label"></b></p>
+
+        <div id="intentionBlock" class="block">
+          <h2 class="block-label">What's your intention?</h2>
+          <div id="intentionChips" class="chips"></div>
+        </div>
+
+        <div id="altBlock" class="block">
+          <h2 class="block-label">…or try this instead</h2>
+          <div id="altSuggestion" class="alt-suggestion"></div>
+          <button id="altRefresh" class="link-btn" type="button">Show another</button>
+        </div>
+
+        <div class="actions">
+          <button id="leaveBtn" class="btn btn-ghost" type="button">
+            I don't want to anymore
+          </button>
+          <button id="continueBtn" class="btn btn-primary" type="button" disabled>
+            Continue to <span class="domain-label"></span>
+          </button>
+        </div>
+        <p id="continueHint" class="hint hidden">Pick an intention to continue.</p>
+      </section>
+
+      <!-- Phase 3: limit reached -->
+      <section id="limitPhase" class="phase hidden">
+        <div class="limit-mark">✦</div>
+        <h1 class="title" id="limitTitle">You've reached your daily limit</h1>
+        <p class="subtitle" id="limitSub"></p>
+        <div class="actions center">
+          <button id="limitLeaveBtn" class="btn btn-primary" type="button">
+            Close this tab
+          </button>
+        </div>
+      </section>
+
+      <!-- Phase 4: stepped away -->
+      <section id="donePhase" class="phase hidden">
+        <div class="done-mark">✓</div>
+        <h1 class="title">Nice. You stepped away.</h1>
+        <p class="subtitle">That's a conscious choice. Carry on with your day.</p>
+        <div class="actions center">
+          <button id="closeBtn" class="btn btn-primary" type="button">Close tab</button>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="pause.js"></script>
+  </body>
+</html>

@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Social Blocker",
+  "version": "1.0.0",
+  "description": "Pause before you scroll. A deep breath, an intention, and a moment of choice before opening distracting sites.",
+  "permissions": [
+    "storage",
+    "webNavigation",
+    "tabs",
+    "alarms",
+    "notifications",
+    "idle"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Social Blocker",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://*.youtube.com/*",
+        "*://*.facebook.com/*",
+        "*://*.twitter.com/*",
+        "*://*.x.com/*"
+      ],
+      "js": ["content/feeds.js"],
+      "css": ["content/feeds.css"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["pause.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

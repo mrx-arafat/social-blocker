@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="options.css" />
+    <title>Social Blocker — Settings</title>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="head">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <h1>Social Blocker</h1>
+        </div>
+        <label class="switch" title="Enable / disable everything">
+          <input type="checkbox" id="masterToggle" />
+          <span class="slider"></span>
+        </label>
+      </header>
+      <p class="tagline">Pause before you scroll. Choose consciously.</p>
+
+      <!-- Pause behaviour -->
+      <section class="card">
+        <h2>The pause</h2>
+        <div class="field">
+          <div class="field-text">
+            <label for="pauseSeconds">Breathing time</label>
+            <span class="hint">How long the breath lasts before you can continue.</span>
+          </div>
+          <div class="field-control">
+            <input type="range" id="pauseSeconds" min="3" max="30" step="1" />
+            <output id="pauseSecondsOut" class="out">8s</output>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="passDurationMin">Re-prompt after</label>
+            <span class="hint">Minutes a site stays open before it asks again.</span>
+          </div>
+          <div class="field-control">
+            <input type="range" id="passDurationMin" min="1" max="60" step="1" />
+            <output id="passDurationOut" class="out">5m</output>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="requireIntention">Ask for an intention</label>
+            <span class="hint">You must name why before continuing.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="requireIntention" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="showAlternatives">Suggest an alternative</label>
+            <span class="hint">Offer something better to do instead.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="showAlternatives" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Blocked sites -->
+      <section class="card">
+        <h2>Guarded sites</h2>
+        <p class="card-sub">
+          Each visit triggers a pause. Set a daily open count or time limit
+          (0 = unlimited).
+        </p>
+        <div class="site-head">
+          <span>Site</span><span>Opens/day</span><span>Mins/day</span><span></span>
+        </div>
+        <div id="siteList" class="site-list"></div>
+        <form id="addSiteForm" class="add-row">
+          <input
+            type="text"
+            id="addSiteInput"
+            placeholder="add a domain, e.g. pinterest.com"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn-add">Add</button>
+        </form>
+      </section>
+
+      <!-- Feed blocking -->
+      <section class="card">
+        <h2>Feed blocking</h2>
+        <p class="card-sub">Hide the most addictive infinite-scroll surfaces.</p>
+        <div class="feed-grid">
+          <label class="feed-item">
+            <input type="checkbox" id="feed_instagramReels" />
+            <span>Instagram Reels</span>
+          </label>
+          <label class="feed-item">
+            <input type="checkbox" id="feed_youtubeShorts" />
+            <span>YouTube Shorts</span>
+          </label>
+          <label class="feed-item">
+            <input type="checkbox" id="feed_facebookReels" />
+            <span>Facebook Reels</span>
+          </label>
+          <label class="feed-item">
+            <input type="checkbox" id="feed_xForYou" />
+            <span>X "For you" tab</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Intentions & alternatives -->
+      <section class="card two-col">
+        <div>
+          <h2>Intentions</h2>
+          <div id="intentionList" class="tag-list"></div>
+          <form id="addIntentionForm" class="add-row sm">
+            <input type="text" id="addIntentionInput" placeholder="add intention" />
+            <button type="submit" class="btn-add">Add</button>
+          </form>
+        </div>
+        <div>
+          <h2>Alternatives</h2>
+          <div id="altList" class="tag-list"></div>
+          <form id="addAltForm" class="add-row sm">
+            <input type="text" id="addAltInput" placeholder="add alternative" />
+            <button type="submit" class="btn-add">Add</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Reminders -->
+      <section class="card">
+        <h2>Reminders</h2>
+        <div class="field">
+          <div class="field-text">
+            <label for="remindersEnabled">Gentle nudges</label>
+            <span class="hint">A periodic notification to check in with yourself.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="remindersEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="reminderEveryMin">Every</label>
+          </div>
+          <div class="field-control">
+            <input type="range" id="reminderEveryMin" min="15" max="480" step="15" />
+            <output id="reminderEveryOut" class="out">120m</output>
+          </div>
+        </div>
+        <div class="field column">
+          <label for="reminderText">Message</label>
+          <input type="text" id="reminderText" class="text-input" />
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="card">
+        <h2>Last 7 days</h2>
+        <div class="stat-cards">
+          <div class="stat"><div class="stat-num" id="wAttempts">0</div><div class="stat-label">Interruptions</div></div>
+          <div class="stat"><div class="stat-num" id="wDismissed">0</div><div class="stat-label">Stepped away</div></div>
+          <div class="stat"><div class="stat-num" id="wRate">0%</div><div class="stat-label">Resisted</div></div>
+        </div>
+        <div id="weekBars" class="week-bars"></div>
+      </section>
+
+      <footer class="foot">Social Blocker · conscious browsing</footer>
+    </div>
+
+    <div id="toast" class="toast">Saved</div>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
