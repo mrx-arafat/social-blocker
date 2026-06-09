@@ -3,7 +3,8 @@ import { getSettings } from "./src/storage.js";
 const params = new URLSearchParams(location.search);
 const target = params.get("target") || "";
 const domain = params.get("domain") || "this site";
-const reason = params.get("reason") || ""; // "", "timeLimit"
+const reason = params.get("reason") || ""; // "", "timeLimit", "openLimit"
+const limitParam = params.get("limit"); // numeric string or null
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -153,10 +154,13 @@ function closeTab() {
 async function init() {
   settings = await getSettings();
 
-  // Time-limit interception skips the breath and goes straight to the wall.
-  if (reason === "timeLimit") {
+  // Being over a daily limit skips the breath and goes straight to the wall.
+  if (reason === "timeLimit" || reason === "openLimit") {
     const site = settings.sites.find((s) => s.domain === domain);
-    showLimit("timeLimit", site ? site.timeLimitMin : "");
+    const fallback =
+      reason === "timeLimit" ? site?.timeLimitMin : site?.openLimit;
+    const limit = limitParam != null ? Number(limitParam) : fallback ?? "";
+    showLimit(reason, limit);
     el.limitLeaveBtn.addEventListener("click", closeTab);
     return;
   }

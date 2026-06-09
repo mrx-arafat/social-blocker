@@ -6,9 +6,24 @@ import {
   getSettings,
   findSite,
   mutateDay,
-  todayKey,
-  hostMatchesDomain
+  getDayStats
 } from "./src/storage.js";
+
+// Decide why a guarded visit should be stopped, given today's stats.
+// Returns a reason ("openLimit" | "timeLimit") + limit, or null for a normal pause.
+function limitReason(site, day) {
+  if (!site) return null;
+  if (site.openLimit > 0 && (day.opens[site.domain] || 0) >= site.openLimit) {
+    return { reason: "openLimit", limit: site.openLimit };
+  }
+  if (
+    site.timeLimitMin > 0 &&
+    (day.time[site.domain] || 0) / 60 >= site.timeLimitMin
+  ) {
+    return { reason: "timeLimit", limit: site.timeLimitMin };
+  }
+  return null;
+}
 
 const PAUSE_PATH = "pause.html";
 const REMINDER_ALARM = "sb_reminder";
@@ -53,11 +68,12 @@ function hostOf(url) {
   }
 }
 
-function pauseUrl({ target, domain, reason }) {
+function pauseUrl({ target, domain, reason, limit }) {
   const u = new URL(chrome.runtime.getURL(PAUSE_PATH));
   u.searchParams.set("target", target);
   u.searchParams.set("domain", domain);
   if (reason) u.searchParams.set("reason", reason);
+  if (limit != null) u.searchParams.set("limit", String(limit));
   return u.toString();
 }
 
@@ -81,12 +97,19 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   // Already holding a pass for this domain? Let it through.
   if (await hasValidPass(site.domain)) return;
 
-  // Intercept: count the attempt, redirect to the breathing screen.
-  await mutateDay((d) => {
+  // Intercept: count the attempt, then redirect. If the user is already over a
+  // daily limit, go straight to the limit wall rather than the breathing screen.
+  const day = await mutateDay((d) => {
     d.attempts += 1;
   });
+  const limit = limitReason(site, day);
   chrome.tabs.update(details.tabId, {
-    url: pauseUrl({ target: url, domain: site.domain })
+    url: pauseUrl({
+      target: url,
+      domain: site.domain,
+      reason: limit ? limit.reason : undefined,
+      limit: limit ? limit.limit : undefined
+    })
   });
 });
 
@@ -122,21 +145,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 async function grantPass(domain) {
   const settings = await getSettings();
   const site = settings.sites.find((s) => s.domain === domain);
-  const day = await mutateDay(() => {}); // read today's snapshot
+  const day = await getDayStats();
 
-  // Daily open-limit check.
-  if (site && site.openLimit > 0) {
-    const used = day.opens[domain] || 0;
-    if (used >= site.openLimit) {
-      return { ok: false, blocked: "openLimit", limit: site.openLimit, used };
-    }
-  }
-  // Daily time-limit check (already exhausted).
-  if (site && site.timeLimitMin > 0) {
-    const spent = (day.time[domain] || 0) / 60;
-    if (spent >= site.timeLimitMin) {
-      return { ok: false, blocked: "timeLimit", limit: site.timeLimitMin };
-    }
+  // Safety net: re-check limits at grant time (covers the time-limit being hit
+  // while the breathing screen was open).
+  const limit = limitReason(site, day);
+  if (limit) {
+    return { ok: false, blocked: limit.reason, limit: limit.limit };
   }
 
   const expiry = Date.now() + settings.passDurationMin * 60 * 1000;
@@ -185,7 +200,8 @@ async function onTick() {
         url: pauseUrl({
           target: tab.url,
           domain: site.domain,
-          reason: "timeLimit"
+          reason: "timeLimit",
+          limit: site.timeLimitMin
         })
       });
     }
