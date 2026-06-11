@@ -62,7 +62,24 @@ export const DEFAULTS = {
     "Do 10 push-ups",
     "Message a friend who matters",
     "Just breathe for a minute"
-  ]
+  ],
+
+  // Schedules: windows of {days:[0-6], start:"HH:MM", end:"HH:MM", mode}.
+  // mode: "normal" (breath+choice) | "strict" (no continue) | "off" (no guard).
+  schedule: { enabled: false, defaultMode: "normal", windows: [] },
+  // Disabling strict protection while a strict window is active requires
+  // typing this phrase exactly (paste blocked).
+  strictPhrase: "I choose to give this hour away",
+  // Epoch ms until which "strict now" (popup quick button) forces strict mode.
+  strictUntil: 0,
+  // Calm-day streak: a day qualifies when no limit wall was hit and total
+  // guarded time stayed under budgetMinutes.
+  streak: { current: 0, best: 0, lastProcessedDate: null },
+  budgetMinutes: 45, // 0 = budget check off
+  // Minutes credited back every time the user steps away (median session).
+  reclaimedMin: 0,
+  // Weekly recap: day 0 = Sunday, hour in local time.
+  recap: { enabled: true, day: 0, hour: 19 }
 };
 
 export function todayKey(d = new Date()) {
@@ -79,6 +96,10 @@ export async function getSettings() {
   // Shallow-merge so new default keys appear after upgrades.
   const merged = { ...DEFAULTS, ...stored };
   merged.feeds = { ...DEFAULTS.feeds, ...(stored.feeds || {}) };
+  merged.schedule = { ...DEFAULTS.schedule, ...(stored.schedule || {}) };
+  if (!Array.isArray(merged.schedule.windows)) merged.schedule.windows = [];
+  merged.streak = { ...DEFAULTS.streak, ...(stored.streak || {}) };
+  merged.recap = { ...DEFAULTS.recap, ...(stored.recap || {}) };
   if (!Array.isArray(merged.sites)) merged.sites = DEFAULTS.sites;
   if (!Array.isArray(merged.intentions)) merged.intentions = DEFAULTS.intentions;
   if (!Array.isArray(merged.alternatives)) merged.alternatives = DEFAULTS.alternatives;
@@ -96,7 +117,13 @@ export async function getAllStats() {
 
 export async function getDayStats(key = todayKey()) {
   const all = await getAllStats();
-  return all[key] || emptyDay();
+  return upgradeDay(all[key] || emptyDay());
+}
+
+// Single source of truth for "today" — popup, options, pause and recap all
+// read through here so the numbers can never disagree.
+export async function getTodayStats() {
+  return getDayStats(todayKey());
 }
 
 export function emptyDay() {
@@ -105,15 +132,24 @@ export function emptyDay() {
     continued: 0, // times the user chose to continue
     dismissed: 0, // times the user chose to leave
     opens: {}, // domain -> open count (passes granted)
-    time: {} // domain -> seconds spent
+    time: {}, // domain -> seconds spent
+    opensByHour: new Array(24).fill(0) // hour -> continues (trigger insight)
   };
+}
+
+// Older day records predate opensByHour — backfill so readers never branch.
+function upgradeDay(day) {
+  if (!Array.isArray(day.opensByHour) || day.opensByHour.length !== 24) {
+    day.opensByHour = new Array(24).fill(0);
+  }
+  return day;
 }
 
 // Atomically mutate today's stats via a reducer.
 export async function mutateDay(fn) {
   const all = await getAllStats();
   const key = todayKey();
-  const day = all[key] || emptyDay();
+  const day = upgradeDay(all[key] || emptyDay());
   fn(day);
   all[key] = day;
   // Keep ~60 days of history.

@@ -95,12 +95,38 @@ site usable:
 - Facebook **Reels**
 - X (Twitter) **"For you"** tab
 
+### Schedules & strict mode *(v2)*
+Time windows per weekday set the guard level: **normal** (breath + choice),
+**strict** (no Continue at all — the only way through is stepping away), or
+**off**. Weakening strict protection *while a strict window is active* requires
+typing an unlock phrase (paste blocked). The popup has a **"Strict now — 1h"**
+panic button.
+
+### Streaks & time reclaimed *(v2)*
+- A **calm day** = no limit wall hit and total guarded time under your daily
+  budget. Consecutive calm days build a streak (popup, pause screen, recap).
+- Every step-away credits your **median session length** back to a running
+  "time reclaimed" total — resisting becomes visible progress, not a void.
+
+### Persuasive pause messages *(v2)*
+The pause screen confronts you with your own numbers, by priority: streak at
+risk → your statistically weakest hour → repeat visits today → weekly cost
+("4h 12m here this week — that's a movie and a walk") → reflection prompts.
+Factual, never shaming — nothing to rebel against.
+
+### Weekly recap *(v2)*
+Once a week a notification opens a recap page: total vs last week, day-by-day
+chart, top sites, weakest hour, step-away rate, streak — and one reflective
+question.
+
 ### Reminders
 Optional periodic notification — a gentle nudge to check in with yourself.
 
 ### Stats
-- **Popup** — today's interruptions, step-aways, and "resisted" rate.
-- **Settings** — last 7 days summary plus a daily bar chart.
+- **Popup** — today's interruptions, step-aways, "resisted" rate, streak,
+  time reclaimed, and per-site minutes/opens against their limits.
+- **Settings** — a **Today** card (same numbers as the popup, by construction),
+  last 7 days summary, 30-day trend, and an opens-by-hour heat strip.
 
 **Default guarded sites:** Instagram, Facebook, TikTok, X/Twitter, YouTube,
 Reddit (Snapchat & LinkedIn are included but off by default). All editable.
@@ -258,10 +284,10 @@ zip -rq social-blocker.zip . -x '.git/*' '.gitignore' '*.DS_Store'
 
 ## Roadmap & known limits
 
-- **`webNavigation` redirect is best-effort.** In MV3 the service worker sleeps;
-  the navigation event wakes it, but the page can occasionally win the race and
-  flash before the redirect. Migrating the block to **`declarativeNetRequest`**
-  (browser-enforced, no awake worker needed) is the planned hardening.
+- **Blocking is browser-enforced** (v2): `declarativeNetRequest` session rules
+  redirect guarded sites before the page loads — no service-worker race, no
+  flash. The `webNavigation` listener remains as a fallback if rule install
+  ever fails.
 - **Feed selectors are best-effort** and may need updates as sites change markup.
 - **Safari / iPad:** this MV3 core can be wrapped as a Safari Web Extension via
   Xcode without rewriting the logic.

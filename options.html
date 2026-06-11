@@ -83,6 +83,46 @@
             <span class="slider"></span>
           </label>
         </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="budgetMinutes">Daily budget</label>
+            <span class="hint">Total guarded-site minutes per day. Staying under keeps your calm-day streak. 0 = off.</span>
+          </div>
+          <div class="field-control">
+            <input type="range" id="budgetMinutes" min="0" max="240" step="5" />
+            <output id="budgetMinutesOut" class="out">45m</output>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schedule -->
+      <section class="card">
+        <h2>Schedule</h2>
+        <p class="card-sub">
+          Time windows when guarding is stricter — or off. Outside all windows
+          the default mode applies. Weakening this during strict hours requires
+          typing the unlock phrase.
+        </p>
+        <div class="field">
+          <div class="field-text">
+            <label for="scheduleEnabled">Use a schedule</label>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="scheduleEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="scheduleDefaultMode">Outside windows</label>
+          </div>
+          <select id="scheduleDefaultMode" class="mode-select">
+            <option value="normal">Normal pause</option>
+            <option value="off">No guarding</option>
+          </select>
+        </div>
+        <div id="windowList" class="window-list"></div>
+        <button id="addWindow" class="btn-add" type="button">Add window</button>
       </section>
 
       <!-- Blocked sites -->
@@ -177,6 +217,47 @@
           <label for="reminderText">Message</label>
           <input type="text" id="reminderText" class="text-input" />
         </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="recapEnabled">Weekly recap</label>
+            <span class="hint">A once-a-week look at your numbers, trends and weakest hour.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="recapEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="recapDay">Recap time</label>
+          </div>
+          <div class="field-control">
+            <select id="recapDay" class="mode-select">
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+            <select id="recapHour" class="mode-select"></select>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:6px">
+          <a id="openRecap" href="#">Open this week's recap now</a>
+        </p>
+      </section>
+
+      <!-- Today -->
+      <section class="card">
+        <h2>Today</h2>
+        <div class="stat-cards">
+          <div class="stat"><div class="stat-num" id="tMinutes">0m</div><div class="stat-label">On guarded sites</div></div>
+          <div class="stat"><div class="stat-num" id="tOpens">0</div><div class="stat-label">Opens</div></div>
+          <div class="stat"><div class="stat-num" id="tStepAways">0</div><div class="stat-label">Stepped away</div></div>
+        </div>
+        <div id="todaySites" class="today-sites"></div>
       </section>
 
       <!-- Stats -->
@@ -190,7 +271,32 @@
         <div id="weekBars" class="week-bars"></div>
       </section>
 
+      <!-- 30-day trend -->
+      <section class="card">
+        <h2>Last 30 days</h2>
+        <p class="card-sub">Interruptions per day.</p>
+        <div id="monthBars" class="week-bars month-bars"></div>
+        <h3 class="sub-head">When you reach for it</h3>
+        <p class="card-sub">Opens by hour of day, last 30 days. Darker = more.</p>
+        <div id="hourStrip" class="hour-strip"></div>
+      </section>
+
       <footer class="foot">Social Blocker · conscious browsing</footer>
+    </div>
+
+    <!-- Strict unlock phrase modal -->
+    <div id="phraseModal" class="modal hidden">
+      <div class="modal-box">
+        <h2>Strict hours are active</h2>
+        <p>To weaken strict protection right now, type this exactly:</p>
+        <p class="phrase-text" id="phraseText"></p>
+        <input type="text" id="phraseInput" autocomplete="off" spellcheck="false"
+               placeholder="Type the phrase" />
+        <div class="modal-actions">
+          <button id="phraseCancel" class="btn-add ghost" type="button">Never mind</button>
+          <button id="phraseConfirm" class="btn-add" type="button" disabled>Confirm</button>
+        </div>
+      </div>
     </div>
 
     <div id="toast" class="toast">Saved</div>

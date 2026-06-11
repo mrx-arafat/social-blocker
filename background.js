@@ -4,10 +4,16 @@
 
 import {
   getSettings,
+  saveSettings,
   findSite,
   mutateDay,
-  getDayStats
+  getDayStats,
+  getAllStats,
+  todayKey
 } from "./src/storage.js";
+import { resolveMode } from "./src/schedule.js";
+import { buildRules } from "./src/rules.js";
+import { rollStreak, medianSessionMin, prevDate } from "./src/streak.js";
 
 // Decide why a guarded visit should be stopped, given today's stats.
 // Returns a reason ("openLimit" | "timeLimit") + limit, or null for a normal pause.
@@ -28,6 +34,8 @@ function limitReason(site, day) {
 const PAUSE_PATH = "pause.html";
 const REMINDER_ALARM = "sb_reminder";
 const TICK_ALARM = "sb_tick"; // 1-min sampler for time-on-site
+const RECAP_ALARM = "sb_recap"; // weekly recap notification
+const RECAP_NOTE_ID = "sb_recap_note";
 
 // ---- temporary passes -------------------------------------------------------
 // Stored in session storage so they vanish on browser restart.
@@ -79,7 +87,28 @@ function pauseUrl({ target, domain, reason, limit }) {
 
 const EXT_ORIGIN = chrome.runtime.getURL("").slice(0, -1); // no trailing /
 
-// ---- navigation interception ------------------------------------------------
+// ---- declarativeNetRequest rule sync ----------------------------------------
+// The browser enforces the redirect itself — no service-worker race, the site
+// never flashes. We rebuild the whole session-rule set from current state;
+// webNavigation below stays as a fallback if rule install ever fails.
+
+async function syncRules() {
+  try {
+    const settings = await getSettings();
+    const mode = resolveMode(settings);
+    const passes = await getPasses();
+    const desired = buildRules(settings, mode, passes, chrome.runtime.getURL(""));
+    const existing = await chrome.declarativeNetRequest.getSessionRules();
+    await chrome.declarativeNetRequest.updateSessionRules({
+      removeRuleIds: existing.map((r) => r.id),
+      addRules: desired
+    });
+  } catch (e) {
+    console.warn("DNR sync failed; webNavigation fallback active", e);
+  }
+}
+
+// ---- navigation interception (fallback path) ---------------------------------
 
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return; // top frame only
@@ -89,6 +118,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 
   const settings = await getSettings();
   if (!settings.enabled) return;
+  if (resolveMode(settings) === "off") return;
 
   const host = hostOf(url);
   const site = findSite(settings, host);
@@ -97,11 +127,11 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   // Already holding a pass for this domain? Let it through.
   if (await hasValidPass(site.domain)) return;
 
-  // Intercept: count the attempt, then redirect. If the user is already over a
-  // daily limit, go straight to the limit wall rather than the breathing screen.
-  const day = await mutateDay((d) => {
-    d.attempts += 1;
-  });
+  // Redirect to the pause screen. Attempt counting and limit resolution live
+  // in pause.js (single counting point for both the DNR and this fallback
+  // path), but we still pass the limit reason when we know it so the wall
+  // renders without a flash of the breathing phase.
+  const day = await getDayStats();
   const limit = limitReason(site, day);
   chrome.tabs.update(details.tabId, {
     url: pauseUrl({
@@ -123,11 +153,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           sendResponse(await grantPass(msg.domain));
           break;
         case "DISMISS":
+          sendResponse(await recordDismiss(msg.domain));
+          break;
+        case "RECORD_ATTEMPT":
           await mutateDay((d) => {
-            d.dismissed += 1;
+            d.attempts += 1;
           });
           sendResponse({ ok: true });
           break;
+        case "GET_MODE":
+          sendResponse({ mode: resolveMode(await getSettings()) });
+          break;
+        case "STRICT_NOW": {
+          const settings = await getSettings();
+          settings.strictUntil = Date.now() + 60 * 60 * 1000;
+          await saveSettings(settings);
+          await syncRules();
+          sendResponse({ ok: true, until: settings.strictUntil });
+          break;
+        }
         case "RESET_REMINDERS":
           await scheduleReminder();
           sendResponse({ ok: true });
@@ -147,6 +191,11 @@ async function grantPass(domain) {
   const site = settings.sites.find((s) => s.domain === domain);
   const day = await getDayStats();
 
+  // Strict hours: the UI hides Continue, but enforce server-side too.
+  if (resolveMode(settings) === "strict") {
+    return { ok: false, blocked: "strict" };
+  }
+
   // Safety net: re-check limits at grant time (covers the time-limit being hit
   // while the breathing screen was open).
   const limit = limitReason(site, day);
@@ -159,14 +208,54 @@ async function grantPass(domain) {
   await mutateDay((d) => {
     d.continued += 1;
     d.opens[domain] = (d.opens[domain] || 0) + 1;
+    d.opensByHour[new Date().getHours()] += 1;
   });
+  await syncRules(); // drop this domain's rule while the pass is live
   return { ok: true };
+}
+
+// Step-away: count it and credit back the median session length for the
+// domain — the visible "time reclaimed" reward.
+async function recordDismiss(domain) {
+  await mutateDay((d) => {
+    d.dismissed += 1;
+  });
+  let credited = 0;
+  if (domain) {
+    const all = await getAllStats();
+    credited = medianSessionMin(all, domain);
+    const settings = await getSettings();
+    settings.reclaimedMin = (settings.reclaimedMin || 0) + credited;
+    await saveSettings(settings);
+  }
+  return { ok: true, credited };
+}
+
+// Evaluate yesterday (and any skipped days) for the calm-day streak.
+// Cheap + idempotent; runs at most once per day's first tick.
+async function rollStreakIfNeeded() {
+  const settings = await getSettings();
+  const today = todayKey();
+  if (settings.streak.lastProcessedDate === prevDate(today)) return;
+  const all = await getAllStats();
+  const rolled = rollStreak(all, settings.streak, settings, today);
+  if (
+    rolled.lastProcessedDate !== settings.streak.lastProcessedDate ||
+    rolled.current !== settings.streak.current ||
+    rolled.best !== settings.streak.best
+  ) {
+    settings.streak = rolled;
+    await saveSettings(settings);
+  }
 }
 
 // Every minute, sample the active foreground tab. If it sits on a guarded
 // site (and the user isn't idle), add a minute of "time on site" and enforce
 // the daily time limit by bouncing the tab to the pause screen.
 async function onTick() {
+  await rollStreakIfNeeded();
+  await syncRules(); // covers pass expiry + schedule boundaries within ≤1 min
+
   const settings = await getSettings();
   if (!settings.enabled) return;
 
@@ -221,8 +310,41 @@ async function scheduleReminder() {
   }
 }
 
+// ---- weekly recap -------------------------------------------------------------
+
+async function scheduleRecap() {
+  await chrome.alarms.clear(RECAP_ALARM);
+  const { recap } = await getSettings();
+  if (!recap.enabled) return;
+  const next = new Date();
+  next.setHours(recap.hour, 0, 0, 0);
+  while (next.getDay() !== recap.day || next <= new Date()) {
+    next.setDate(next.getDate() + 1);
+  }
+  chrome.alarms.create(RECAP_ALARM, {
+    when: next.getTime(),
+    periodInMinutes: 7 * 24 * 60
+  });
+}
+
+chrome.notifications.onClicked.addListener((id) => {
+  if (id !== RECAP_NOTE_ID) return;
+  chrome.tabs.create({ url: chrome.runtime.getURL("recap.html") });
+  chrome.notifications.clear(RECAP_NOTE_ID);
+});
+
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === TICK_ALARM) return onTick();
+  if (alarm.name === RECAP_ALARM) {
+    chrome.notifications.create(RECAP_NOTE_ID, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icons/icon128.png"),
+      title: "Your week, in minutes",
+      message: "Tap to see your Social Blocker weekly recap.",
+      priority: 1
+    });
+    return;
+  }
   if (alarm.name !== REMINDER_ALARM) return;
   const settings = await getSettings();
   if (!settings.remindersEnabled) return;
@@ -235,20 +357,31 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   });
 });
 
-// React to settings changes (e.g. reminder cadence).
+// React to settings changes (reminder cadence, sites, schedule, master toggle).
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.sb_settings) scheduleReminder();
+  if (area === "local" && changes.sb_settings) {
+    scheduleReminder();
+    scheduleRecap();
+    syncRules();
+  }
 });
 
 function ensureTick() {
   chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1, delayInMinutes: 1 });
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   ensureTick();
   await scheduleReminder();
+  await scheduleRecap();
+  await syncRules();
+  if (details && details.reason === "install") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+  }
 });
 chrome.runtime.onStartup.addListener(async () => {
   ensureTick();
   await scheduleReminder();
+  await scheduleRecap();
+  await syncRules();
 });

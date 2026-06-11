@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Social Blocker",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Pause before you scroll. A deep breath, an intention, and a moment of choice before opening distracting sites.",
   "permissions": [
     "storage",
@@ -9,7 +9,8 @@
     "tabs",
     "alarms",
     "notifications",
-    "idle"
+    "idle",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -31,6 +32,12 @@
     "page": "options.html",
     "open_in_tab": true
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["pause.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

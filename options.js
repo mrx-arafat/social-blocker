@@ -2,13 +2,55 @@ import {
   getSettings,
   saveSettings,
   getAllStats,
+  getTodayStats,
   todayKey,
   normalizeDomain,
   DEFAULTS
 } from "./src/storage.js";
+import { strictActive } from "./src/schedule.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
+
+// ---- strict phrase gate -------------------------------------------------------
+// While strict hours are active, any change that weakens strict protection
+// (master off, schedule off, editing/removing windows, removing sites) must be
+// confirmed by typing the unlock phrase. Paste is blocked.
+let pendingApply = null;
+
+function guardStrict(applyFn) {
+  if (!strictActive(settings)) {
+    applyFn();
+    return;
+  }
+  pendingApply = applyFn;
+  $("#phraseText").textContent = settings.strictPhrase;
+  const inp = $("#phraseInput");
+  inp.value = "";
+  $("#phraseConfirm").disabled = true;
+  $("#phraseModal").classList.remove("hidden");
+  inp.focus();
+}
+
+function bindPhraseModal() {
+  const inp = $("#phraseInput");
+  inp.addEventListener("paste", (e) => e.preventDefault());
+  inp.addEventListener("input", () => {
+    $("#phraseConfirm").disabled = inp.value !== settings.strictPhrase;
+  });
+  $("#phraseCancel").addEventListener("click", () => {
+    pendingApply = null;
+    // Full reload resets any optimistic UI state without re-binding listeners.
+    location.reload();
+  });
+  $("#phraseConfirm").addEventListener("click", () => {
+    if (inp.value !== settings.strictPhrase) return;
+    $("#phraseModal").classList.add("hidden");
+    const fn = pendingApply;
+    pendingApply = null;
+    if (fn) fn();
+  });
+}
 
 // ---- save + toast -----------------------------------------------------------
 let toastTimer;
@@ -58,9 +100,17 @@ function renderSites() {
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = site.enabled;
-    cb.style.accentColor = "#000";
     cb.addEventListener("change", () => {
-      site.enabled = cb.checked;
+      if (!cb.checked) {
+        guardStrict(() => {
+          site.enabled = false;
+          persist();
+          renderSites();
+        });
+        cb.checked = site.enabled; // revert until confirmed
+        return;
+      }
+      site.enabled = true;
       persist();
       renderSites();
     });
@@ -80,15 +130,17 @@ function renderSites() {
       persist();
     });
 
-    // remove
+    // remove (weakens strict coverage -> phrase-gated during strict hours)
     const rm = document.createElement("button");
     rm.className = "icon-btn";
     rm.textContent = "×";
     rm.title = "Remove";
     rm.addEventListener("click", () => {
-      settings.sites.splice(i, 1);
-      persist();
-      renderSites();
+      guardStrict(() => {
+        settings.sites.splice(i, 1);
+        persist();
+        renderSites();
+      });
     });
 
     row.append(name, opens, mins, rm);
@@ -169,6 +221,182 @@ function bindAdder(formId, inputId, arrKey, listId) {
   });
 }
 
+// ---- schedule editor ----------------------------------------------------------
+const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function defaultWindow() {
+  return { days: [1, 2, 3, 4, 5], start: "09:00", end: "17:00", mode: "strict" };
+}
+
+// Any edit that could weaken strict coverage goes through guardStrict; pure
+// tightening (adding a window) does not.
+function renderWindows() {
+  const list = $("#windowList");
+  list.innerHTML = "";
+  settings.schedule.windows.forEach((w, i) => {
+    const row = document.createElement("div");
+    row.className = "window-row";
+
+    const days = document.createElement("div");
+    days.className = "day-checks";
+    DAY_LETTERS.forEach((letter, d) => {
+      const lab = document.createElement("label");
+      lab.className = "day-check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = w.days.includes(d);
+      cb.addEventListener("change", () => {
+        guardStrict(() => {
+          if (cb.checked) {
+            if (!w.days.includes(d)) w.days.push(d);
+          } else {
+            w.days = w.days.filter((x) => x !== d);
+          }
+          persist();
+          renderWindows();
+        });
+      });
+      const span = document.createElement("span");
+      span.textContent = letter;
+      lab.append(cb, span);
+      days.appendChild(lab);
+    });
+
+    const start = document.createElement("input");
+    start.type = "time";
+    start.value = w.start;
+    start.addEventListener("change", () => {
+      guardStrict(() => {
+        w.start = start.value;
+        persist();
+      });
+    });
+    const end = document.createElement("input");
+    end.type = "time";
+    end.value = w.end;
+    end.addEventListener("change", () => {
+      guardStrict(() => {
+        w.end = end.value;
+        persist();
+      });
+    });
+
+    const mode = document.createElement("select");
+    mode.className = "mode-select";
+    [["normal", "Normal"], ["strict", "Strict"], ["off", "Off"]].forEach(([v, t]) => {
+      const o = document.createElement("option");
+      o.value = v;
+      o.textContent = t;
+      mode.appendChild(o);
+    });
+    mode.value = w.mode;
+    mode.addEventListener("change", () => {
+      guardStrict(() => {
+        w.mode = mode.value;
+        persist();
+      });
+    });
+
+    const rm = document.createElement("button");
+    rm.className = "icon-btn";
+    rm.textContent = "×";
+    rm.title = "Remove window";
+    rm.addEventListener("click", () => {
+      guardStrict(() => {
+        settings.schedule.windows.splice(i, 1);
+        persist();
+        renderWindows();
+      });
+    });
+
+    const times = document.createElement("div");
+    times.className = "window-times";
+    times.append(start, document.createTextNode("–"), end);
+
+    row.append(days, times, mode, rm);
+    list.appendChild(row);
+  });
+}
+
+function bindSchedule() {
+  const en = $("#scheduleEnabled");
+  en.checked = settings.schedule.enabled;
+  en.addEventListener("change", () => {
+    if (!en.checked) {
+      guardStrict(() => {
+        settings.schedule.enabled = false;
+        persist();
+      });
+      en.checked = settings.schedule.enabled;
+      return;
+    }
+    settings.schedule.enabled = true;
+    persist();
+  });
+
+  const dm = $("#scheduleDefaultMode");
+  dm.value = settings.schedule.defaultMode;
+  dm.addEventListener("change", () => {
+    settings.schedule.defaultMode = dm.value;
+    persist();
+  });
+
+  $("#addWindow").addEventListener("click", () => {
+    settings.schedule.windows.push(defaultWindow());
+    persist();
+    renderWindows();
+  });
+
+  renderWindows();
+}
+
+// ---- budget + recap -------------------------------------------------------------
+function bindBudget() {
+  const elx = $("#budgetMinutes");
+  const out = $("#budgetMinutesOut");
+  const fmt = (v) => (Number(v) === 0 ? "off" : v + "m");
+  elx.value = settings.budgetMinutes;
+  out.textContent = fmt(settings.budgetMinutes);
+  elx.addEventListener("input", () => (out.textContent = fmt(elx.value)));
+  elx.addEventListener("change", () => {
+    settings.budgetMinutes = Number(elx.value);
+    persist();
+  });
+}
+
+function bindRecap() {
+  const en = $("#recapEnabled");
+  en.checked = settings.recap.enabled;
+  en.addEventListener("change", () => {
+    settings.recap.enabled = en.checked;
+    persist();
+  });
+
+  const hourSel = $("#recapHour");
+  for (let h = 0; h < 24; h++) {
+    const o = document.createElement("option");
+    o.value = String(h);
+    o.textContent = String(h).padStart(2, "0") + ":00";
+    hourSel.appendChild(o);
+  }
+  const daySel = $("#recapDay");
+  daySel.value = String(settings.recap.day);
+  hourSel.value = String(settings.recap.hour);
+  daySel.addEventListener("change", () => {
+    settings.recap.day = Number(daySel.value);
+    persist();
+  });
+  hourSel.addEventListener("change", () => {
+    settings.recap.hour = Number(hourSel.value);
+    persist();
+  });
+
+  $("#openRecap").addEventListener("click", (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: chrome.runtime.getURL("recap.html") });
+  });
+}
+
 // ---- reminders text ---------------------------------------------------------
 function bindReminderText() {
   const elx = $("#reminderText");
@@ -180,6 +408,101 @@ function bindReminderText() {
 }
 
 // ---- stats ------------------------------------------------------------------
+
+function fmtH(min) {
+  const h = Math.floor(min / 60), m = Math.round(min % 60);
+  return h ? `${h}h${m ? " " + m + "m" : ""}` : `${m}m`;
+}
+
+// Today card — reads through the same getTodayStats() as the popup, so the
+// daily numbers shown here can never disagree with anything else.
+async function renderToday() {
+  const day = await getTodayStats();
+  const totalMin = Math.round(
+    Object.values(day.time).reduce((a, b) => a + b, 0) / 60
+  );
+  const totalOpens = Object.values(day.opens).reduce((a, b) => a + b, 0);
+  $("#tMinutes").textContent = fmtH(totalMin);
+  $("#tOpens").textContent = totalOpens;
+  $("#tStepAways").textContent = day.dismissed;
+
+  const box = $("#todaySites");
+  box.innerHTML = "";
+  const active = settings.sites.filter(
+    (s) => (day.time[s.domain] || 0) > 0 || (day.opens[s.domain] || 0) > 0
+  );
+  for (const site of active) {
+    const min = Math.round((day.time[site.domain] || 0) / 60);
+    const opens = day.opens[site.domain] || 0;
+    const row = document.createElement("div");
+    row.className = "today-site-row";
+    const name = document.createElement("span");
+    name.className = "dom";
+    name.textContent = site.domain;
+    const use = document.createElement("span");
+    use.className = "use";
+    const minTxt = site.timeLimitMin > 0 ? `${min}m / ${site.timeLimitMin}m` : `${min}m`;
+    const openTxt = site.openLimit > 0 ? `${opens} / ${site.openLimit} opens` : `${opens} open${opens === 1 ? "" : "s"}`;
+    use.textContent = `${minTxt} · ${openTxt}`;
+    row.append(name, use);
+    box.appendChild(row);
+  }
+  if (!active.length) {
+    const p = document.createElement("p");
+    p.className = "card-sub";
+    p.textContent = "No guarded-site activity yet today.";
+    box.appendChild(p);
+  }
+}
+
+// 30-day interruption bars + hour-of-day heat strip.
+async function renderMonth() {
+  const all = await getAllStats();
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({ key: todayKey(d), date: d, stat: all[todayKey(d)] });
+  }
+  let max = 1;
+  days.forEach((d) => {
+    if (d.stat) max = Math.max(max, d.stat.attempts);
+  });
+
+  const bars = $("#monthBars");
+  bars.innerHTML = "";
+  days.forEach((d) => {
+    const col = document.createElement("div");
+    col.className = "week-bar";
+    const n = d.stat ? d.stat.attempts : 0;
+    const bar = document.createElement("div");
+    bar.className = "bar" + (n ? "" : " empty");
+    bar.style.height = (n ? Math.max(6, (n / max) * 100) : 3) + "%";
+    bar.title = `${d.key}: ${n} interruption${n === 1 ? "" : "s"}`;
+    const lab = document.createElement("div");
+    lab.className = "day";
+    const dom = d.date.getDate();
+    lab.textContent = dom === 1 || dom === 15 ? String(dom) : "";
+    col.append(bar, lab);
+    bars.appendChild(col);
+  });
+
+  const hours = new Array(24).fill(0);
+  days.forEach((d) => {
+    (d.stat?.opensByHour || []).forEach((n, h) => (hours[h] += n));
+  });
+  const hMax = Math.max(1, ...hours);
+  const strip = $("#hourStrip");
+  strip.innerHTML = "";
+  hours.forEach((n, h) => {
+    const cell = document.createElement("div");
+    cell.className = "hour-cell";
+    cell.style.opacity = n ? String(0.25 + 0.75 * (n / hMax)) : "0.08";
+    cell.title = `${String(h).padStart(2, "0")}:00 — ${n} open${n === 1 ? "" : "s"}`;
+    strip.appendChild(cell);
+  });
+}
+
 async function renderStats() {
   const all = await getAllStats();
   const days = [];
@@ -227,7 +550,21 @@ async function renderStats() {
 async function init() {
   settings = await getSettings();
 
-  bindToggle("masterToggle", "enabled");
+  // Master toggle weakens strict coverage — phrase-gated during strict hours.
+  const master = $("#masterToggle");
+  master.checked = settings.enabled;
+  master.onchange = () => {
+    if (!master.checked) {
+      guardStrict(() => {
+        settings.enabled = false;
+        persist();
+      });
+      master.checked = settings.enabled;
+      return;
+    }
+    settings.enabled = true;
+    persist();
+  };
   bindRange("pauseSeconds", "pauseSecondsOut", "pauseSeconds", "s");
   bindToggle("escalatePause", "escalatePause");
   bindRange("escalateStep", "escalateStepOut", "escalateStep", "s");
@@ -247,7 +584,14 @@ async function init() {
   bindRange("reminderEveryMin", "reminderEveryOut", "reminderEveryMin", "m");
   bindReminderText();
 
+  bindBudget();
+  bindSchedule();
+  bindRecap();
+
+  await renderToday();
   await renderStats();
+  await renderMonth();
 }
 
+bindPhraseModal();
 init();

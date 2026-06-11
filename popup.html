@@ -17,6 +17,18 @@
       </label>
     </header>
 
+    <section class="psy-row">
+      <div class="psy-card">
+        <div class="psy-num" id="pStreak">0</div>
+        <div class="psy-label">calm-day streak</div>
+        <div class="psy-sub" id="pBest"></div>
+      </div>
+      <div class="psy-card">
+        <div class="psy-num" id="pReclaimed">0m</div>
+        <div class="psy-label">time reclaimed</div>
+      </div>
+    </section>
+
     <section class="stat-row">
       <div class="stat">
         <div class="stat-num" id="sAttempts">0</div>
@@ -34,6 +46,9 @@
 
     <p class="today-note" id="todayNote">No interruptions yet today.</p>
 
+    <section id="siteToday" class="site-today"></section>
+
+    <button id="strictNow" class="pop-btn ghost">Strict now — 1h</button>
     <button id="openOptions" class="pop-btn">Settings &amp; blocked sites</button>
   </body>
   <script type="module" src="popup.js"></script>

@@ -5,6 +5,19 @@
   --line: #ebebeb;
   --muted: #8c8c8c;
   --muted-2: #b1b1b1;
+  --on-ink: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1b1b;
+    --ink: #f2f2f2;
+    --surface: #131313;
+    --line: #2c2c2c;
+    --muted: #9a9a9a;
+    --muted-2: #6b6b6b;
+    --on-ink: #131313;
+  }
 }
 * { box-sizing: border-box; }
 body {
@@ -118,7 +131,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .add-row input:focus { outline: none; border-color: var(--ink); }
 .btn-add {
-  border: none; background: var(--ink); color: #fff; border-radius: 10px;
+  border: none; background: var(--ink); color: var(--on-ink); border-radius: 10px;
   padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 
@@ -159,11 +172,84 @@ input[type="range"]::-webkit-slider-thumb {
 .week-bar .bar.empty { background: var(--line); }
 .week-bar .day { font-size: 10px; color: var(--muted); }
 
+/* v2: schedule editor */
+.window-list { margin-top: 4px; }
+.window-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 0; border-top: 1px solid var(--line);
+}
+.day-checks { display: flex; gap: 4px; }
+.day-check {
+  position: relative; cursor: pointer; user-select: none;
+}
+.day-check input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.day-check span {
+  display: grid; place-items: center; width: 26px; height: 26px;
+  border: 1px solid var(--line); border-radius: 50%;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+}
+.day-check input:checked + span {
+  background: var(--ink); color: var(--on-ink); border-color: var(--ink);
+}
+.window-times { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.window-times input[type="time"] {
+  border: 1px solid var(--line); border-radius: 8px; padding: 5px 7px;
+  font-size: 13px; background: var(--bg); color: var(--ink);
+}
+.mode-select {
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px;
+  font-size: 13px; background: var(--bg); color: var(--ink);
+}
+.btn-add.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn-add:disabled { opacity: 0.5; cursor: default; }
+
+/* v2: today card */
+.today-sites { margin-top: 4px; }
+.today-site-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px;
+}
+.today-site-row .use {
+  color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums;
+}
+
+/* v2: 30-day + hour strip */
+.month-bars { gap: 3px; height: 70px; margin-bottom: 18px; }
+.month-bars .bar { border-radius: 3px 3px 0 0; max-width: 16px; }
+.sub-head { font-size: 14px; margin: 0 0 4px; }
+.hour-strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; }
+.hour-cell {
+  height: 26px; border-radius: 5px; background: var(--ink);
+}
+
+/* v2: strict phrase modal */
+.modal {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
+  display: grid; place-items: center; z-index: 50;
+}
+.modal.hidden { display: none; }
+.modal-box {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 18px;
+  max-width: 420px; width: calc(100% - 48px); padding: 24px;
+}
+.modal-box h2 { margin: 0 0 8px; font-size: 17px; }
+.modal-box p { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+.modal-box .phrase-text {
+  font-weight: 600; color: var(--ink); user-select: none;
+  background: var(--surface); border-radius: 10px; padding: 10px 12px;
+}
+#phraseInput {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; background: var(--bg); color: var(--ink);
+}
+#phraseInput:focus { outline: none; border-color: var(--ink); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
 .foot { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 24px; }
 
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px;
+  background: var(--ink); color: var(--on-ink); padding: 10px 18px; border-radius: 999px;
   font-size: 13px; opacity: 0; pointer-events: none; transition: 0.25s;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

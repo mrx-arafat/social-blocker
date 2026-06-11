@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="recap.css" />
+    <title>Your week — Social Blocker</title>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="head">
+        <span class="brand-dot"></span>
+        <h1>Your week, in minutes</h1>
+      </header>
+      <p class="range" id="weekRange"></p>
+
+      <section class="hero">
+        <div class="hero-num" id="weekTotal">0m</div>
+        <div class="hero-label">on guarded sites this week</div>
+        <div class="delta" id="weekDelta"></div>
+      </section>
+
+      <section class="card">
+        <h2>Day by day</h2>
+        <div id="dayBars" class="day-bars"></div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2>Top sites</h2>
+          <div id="topSites" class="top-sites"></div>
+        </div>
+        <div class="card">
+          <h2>Signals</h2>
+          <div class="signal"><span class="sig-label">Weakest hour</span><span class="sig-val" id="worstHour">—</span></div>
+          <div class="signal"><span class="sig-label">Step-away rate</span><span class="sig-val" id="stepRate">—</span></div>
+          <div class="signal"><span class="sig-label">Calm-day streak</span><span class="sig-val" id="streakVal">—</span></div>
+          <div class="signal"><span class="sig-label">Time reclaimed (all time)</span><span class="sig-val" id="reclaimedVal">—</span></div>
+        </div>
+      </section>
+
+      <section class="card reflect">
+        <h2>One question</h2>
+        <p id="reflection" class="reflection"></p>
+      </section>
+
+      <footer class="foot">Social Blocker · nothing leaves your device</footer>
+    </div>
+    <script type="module" src="recap.js"></script>
+  </body>
+</html>

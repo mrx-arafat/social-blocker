@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="onboarding.css" />
+    <title>Welcome — Social Blocker</title>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="head">
+        <span class="brand-dot"></span>
+        <h1>Social Blocker</h1>
+      </header>
+      <p class="tagline">Three quick choices. You can change everything later.</p>
+
+      <div class="dots">
+        <span class="dot active" data-step="0"></span>
+        <span class="dot" data-step="1"></span>
+        <span class="dot" data-step="2"></span>
+      </div>
+
+      <!-- Step 1: sites -->
+      <section class="step" id="step0">
+        <h2>Which sites pull you in?</h2>
+        <p class="sub">Each visit will start with a breath and a choice.</p>
+        <div id="siteChecks" class="site-checks"></div>
+        <form id="addSiteForm" class="add-row">
+          <input type="text" id="addSiteInput" placeholder="add another, e.g. pinterest.com" autocomplete="off" />
+          <button type="submit" class="btn ghost sm">Add</button>
+        </form>
+      </section>
+
+      <!-- Step 2: schedule -->
+      <section class="step hidden" id="step1">
+        <h2>Protect your work hours?</h2>
+        <p class="sub">
+          During strict hours there's no "continue" button — the only way
+          through the pause is to step away. Optional, and editable later.
+        </p>
+        <label class="big-check">
+          <input type="checkbox" id="workHours" />
+          <span>
+            <b>Strict Mon–Fri, 9:00–17:00</b><br />
+            <small>Outside those hours: the normal breath-and-choice pause.</small>
+          </span>
+        </label>
+      </section>
+
+      <!-- Step 3: budget -->
+      <section class="step hidden" id="step2">
+        <h2>Set a daily budget</h2>
+        <p class="sub">
+          Total minutes per day across all guarded sites. Staying under it
+          builds your calm-day streak. 0 turns the budget off.
+        </p>
+        <div class="budget-row">
+          <input type="range" id="budgetRange" min="0" max="240" step="5" value="45" />
+          <output id="budgetOut" class="budget-out">45m</output>
+        </div>
+      </section>
+
+      <div class="nav">
+        <button id="skipBtn" class="btn ghost" type="button">Skip</button>
+        <button id="nextBtn" class="btn" type="button">Next</button>
+      </div>
+    </main>
+    <script type="module" src="onboarding.js"></script>
+  </body>
+</html>

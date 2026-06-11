@@ -18,12 +18,15 @@
         </div>
         <h1 class="title" id="breatheTitle">Take a deep breath…</h1>
         <p class="subtitle" id="breatheSub">Opening <b id="domainLabel">this site</b></p>
+        <div id="streakBadge" class="streak-badge hidden"></div>
       </section>
 
       <!-- Phase 2: choice -->
       <section id="choicePhase" class="phase hidden">
         <h1 class="title">Do you really need it now?</h1>
         <p class="subtitle">You're about to open <b class="domain-label"></b></p>
+        <p id="psyMessage" class="psy-message"></p>
+        <p id="strictNote" class="strict-note hidden"></p>
 
         <div id="intentionBlock" class="block">
           <h2 class="block-label">What's your intention?</h2>
@@ -64,6 +67,7 @@
         <div class="done-mark">✓</div>
         <h1 class="title">Nice. You stepped away.</h1>
         <p class="subtitle">That's a conscious choice. Carry on with your day.</p>
+        <p id="doneSub" class="reclaimed-note"></p>
         <div class="actions center">
           <button id="closeBtn" class="btn btn-primary" type="button">Close tab</button>
         </div>

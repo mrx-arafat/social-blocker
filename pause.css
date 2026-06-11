@@ -5,8 +5,21 @@
   --line: #ebebeb;
   --muted: #8c8c8c;
   --muted-2: #b1b1b1;
+  --on-ink: #ffffff;
   --radius: 16px;
   --radius-pill: 999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131313;
+    --ink: #f2f2f2;
+    --surface: #1e1e1e;
+    --line: #2c2c2c;
+    --muted: #9a9a9a;
+    --muted-2: #6b6b6b;
+    --on-ink: #131313;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -68,9 +81,12 @@ html, body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #ffffff 38%, var(--surface) 70%);
+  background: radial-gradient(circle at 50% 50%, var(--bg) 38%, var(--surface) 70%);
   border: 1px solid var(--line);
   animation: breathe 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .breath-ring { animation: none; }
 }
 .breath-core {
   position: relative;
@@ -78,7 +94,7 @@ html, body {
   height: 96px;
   border-radius: 50%;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   display: grid;
   place-items: center;
 }
@@ -123,9 +139,50 @@ html, body {
 .chip:hover { border-color: var(--muted-2); }
 .chip.selected {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   border-color: var(--ink);
 }
+
+/* ---- v2: streak badge, persuasive message, strict note ---- */
+.streak-badge {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+.streak-badge.hidden { display: none; }
+
+.psy-message {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--muted);
+  max-width: 40ch;
+  margin: 14px auto 0;
+}
+.psy-message:empty { display: none; }
+
+.strict-note {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 16px auto 0;
+  max-width: 42ch;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.strict-note.hidden { display: none; }
+
+.reclaimed-note {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.reclaimed-note:empty { display: none; }
 
 .alt-suggestion {
   background: var(--surface);
@@ -165,9 +222,10 @@ html, body {
   transition: transform 0.08s ease, opacity 0.15s ease, background 0.15s ease;
 }
 .btn:active { transform: scale(0.98); }
+.btn.hidden { display: none; }
 .btn-primary {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
 }
 .btn-primary:disabled {
   background: var(--muted-2);
@@ -196,7 +254,7 @@ html, body {
   height: 84px;
   border-radius: 50%;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   display: grid;
   place-items: center;
   margin: 0 auto 16px;
