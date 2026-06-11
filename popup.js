@@ -1,5 +1,6 @@
 import { getSettings, saveSettings, getTodayStats } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
+import { applyTheme } from "./src/theme.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -11,6 +12,7 @@ function fmtH(min) {
 async function render() {
   const settings = await getSettings();
   const day = await getTodayStats();
+  applyTheme(settings.theme);
 
   $("#masterToggle").checked = settings.enabled;
 

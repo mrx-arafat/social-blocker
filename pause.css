@@ -10,16 +10,14 @@
   --radius-pill: 999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #131313;
-    --ink: #f2f2f2;
-    --surface: #1e1e1e;
-    --line: #2c2c2c;
-    --muted: #9a9a9a;
-    --muted-2: #6b6b6b;
-    --on-ink: #131313;
-  }
+html[data-theme="dark"] {
+  --bg: #131313;
+  --ink: #f2f2f2;
+  --surface: #1e1e1e;
+  --line: #2c2c2c;
+  --muted: #9a9a9a;
+  --muted-2: #6b6b6b;
+  --on-ink: #131313;
 }
 
 * { box-sizing: border-box; }

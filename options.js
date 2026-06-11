@@ -8,6 +8,7 @@ import {
   DEFAULTS
 } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
+import { applyTheme } from "./src/theme.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
@@ -549,6 +550,17 @@ async function renderStats() {
 // ---- init -------------------------------------------------------------------
 async function init() {
   settings = await getSettings();
+  applyTheme(settings.theme);
+
+  const themeBtn = $("#themeToggle");
+  const themeIcon = () => (themeBtn.textContent = settings.theme === "dark" ? "☀" : "☾");
+  themeIcon();
+  themeBtn.addEventListener("click", () => {
+    settings.theme = settings.theme === "dark" ? "light" : "dark";
+    applyTheme(settings.theme);
+    themeIcon();
+    persist();
+  });
 
   // Master toggle weakens strict coverage — phrase-gated during strict hours.
   const master = $("#masterToggle");

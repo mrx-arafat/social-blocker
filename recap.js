@@ -1,4 +1,5 @@
 import { getSettings, getAllStats, todayKey } from "./src/storage.js";
+import { applyTheme } from "./src/theme.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -42,6 +43,7 @@ function isoWeek(d) {
 async function init() {
   const settings = await getSettings();
   const all = await getAllStats();
+  applyTheme(settings.theme);
 
   const now = new Date();
   const thisWeek = keysBack(now, 7);

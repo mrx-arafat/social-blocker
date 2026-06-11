@@ -1,4 +1,5 @@
 import { getSettings, saveSettings, normalizeDomain } from "./src/storage.js";
+import { applyTheme } from "./src/theme.js";
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
@@ -83,6 +84,7 @@ $("#skipBtn").addEventListener("click", finish);
 
 async function init() {
   settings = await getSettings();
+  applyTheme(settings.theme);
   range.value = settings.budgetMinutes;
   out.textContent = fmt(settings.budgetMinutes);
   $("#workHours").checked = settings.schedule.enabled;

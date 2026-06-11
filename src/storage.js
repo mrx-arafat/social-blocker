@@ -79,7 +79,9 @@ export const DEFAULTS = {
   // Minutes credited back every time the user steps away (median session).
   reclaimedMin: 0,
   // Weekly recap: day 0 = Sunday, hour in local time.
-  recap: { enabled: true, day: 0, hour: 19 }
+  recap: { enabled: true, day: 0, hour: 19 },
+  // UI theme for all extension pages: "light" | "dark".
+  theme: "light"
 };
 
 export function todayKey(d = new Date()) {

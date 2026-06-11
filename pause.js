@@ -1,6 +1,7 @@
 import { getSettings, getTodayStats, getAllStats, todayKey } from "./src/storage.js";
 import { pickMessage } from "./src/messages.js";
 import { medianSessionMin } from "./src/streak.js";
+import { applyTheme } from "./src/theme.js";
 
 const params = new URLSearchParams(location.search);
 const domain = params.get("domain") || "this site";
@@ -246,6 +247,7 @@ function messageContext(all, day, streak) {
 
 async function init() {
   settings = await getSettings();
+  applyTheme(settings.theme);
 
   // Single counting point for interruptions (DNR + fallback paths both land here).
   await chrome.runtime.sendMessage({ type: "RECORD_ATTEMPT" });

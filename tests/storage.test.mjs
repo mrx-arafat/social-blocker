@@ -33,4 +33,5 @@ test("getSettings merges v2 defaults", async () => {
   assert.equal(s.budgetMinutes, 45);
   assert.equal(s.reclaimedMin, 0);
   assert.equal(s.recap.enabled, true);
+  assert.equal(s.theme, "light");
 });
