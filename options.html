@@ -343,11 +343,15 @@
     <!-- Strict unlock phrase modal -->
     <div id="phraseModal" class="modal hidden">
       <div class="modal-box">
+        <div class="modal-emoji">🧘</div>
         <h2 id="phraseTitle">Strict hours are active</h2>
         <p id="phraseBody">To weaken strict protection right now, type this exactly:</p>
         <p class="phrase-text" id="phraseText"></p>
-        <input type="text" id="phraseInput" autocomplete="off" spellcheck="false"
-               placeholder="Type the phrase" />
+        <div class="phrase-field">
+          <input type="text" id="phraseInput" autocomplete="off" spellcheck="false"
+                 placeholder="Type it here…" />
+          <span class="phrase-check" id="phraseCheck" aria-hidden="true">✓</span>
+        </div>
         <div class="modal-actions">
           <button id="phraseCancel" class="btn-add ghost" type="button">Never mind</button>
           <button id="phraseConfirm" class="btn-add" type="button" disabled>Confirm</button>

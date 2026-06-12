@@ -229,26 +229,52 @@ input[type="range"]::-webkit-slider-thumb {
 
 /* v2: strict phrase modal */
 .modal {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45);
-  display: grid; place-items: center; z-index: 50;
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+  display: grid; place-items: center; z-index: 50; padding: 16px;
+  animation: modal-fade 0.18s ease both;
 }
 .modal.hidden { display: none; }
 .modal-box {
-  background: var(--bg); border: 1px solid var(--line); border-radius: 18px;
-  max-width: 420px; width: calc(100% - 48px); padding: 24px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 22px;
+  max-width: 420px; width: calc(100% - 32px); padding: 26px 24px;
+  text-align: center; box-shadow: 0 20px 56px rgba(0, 0, 0, 0.3);
+  animation: modal-pop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.modal-box h2 { margin: 0 0 8px; font-size: 17px; }
+.modal-emoji {
+  width: 52px; height: 52px; margin: 0 auto 12px;
+  display: grid; place-items: center; font-size: 27px;
+  background: var(--surface); border-radius: 50%;
+}
+.modal-box h2 { margin: 0 0 6px; font-size: 18px; }
 .modal-box p { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
 .modal-box .phrase-text {
   font-weight: 600; color: var(--ink); user-select: none;
-  background: var(--surface); border-radius: 10px; padding: 10px 12px;
+  background: var(--surface); border-radius: 12px; padding: 12px 14px;
+  line-height: 1.35;
 }
+.phrase-field { position: relative; margin-top: 10px; }
 #phraseInput {
-  width: 100%; border: 1px solid var(--line); border-radius: 10px;
-  padding: 10px 12px; font-size: 14px; background: var(--bg); color: var(--ink);
+  width: 100%; border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 12px 38px 12px 14px; font-size: 14px; background: var(--bg);
+  color: var(--ink); transition: border-color 0.15s ease;
 }
 #phraseInput:focus { outline: none; border-color: var(--ink); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.phrase-field.match #phraseInput { border-color: #1aa06d; }
+.phrase-check {
+  position: absolute; right: 13px; top: 50%;
+  transform: translateY(-50%) scale(0.6);
+  color: #1aa06d; font-weight: 700; opacity: 0; transition: 0.15s ease;
+}
+.phrase-field.match .phrase-check { opacity: 1; transform: translateY(-50%) scale(1); }
+.modal-actions { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+@keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-box { animation: none; }
+}
 
 .foot { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 24px; }
 

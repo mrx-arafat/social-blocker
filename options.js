@@ -30,6 +30,7 @@ function confirmWithPhrase(phrase, applyFn, copy = {}) {
   $("#phraseText").textContent = phrase;
   const inp = $("#phraseInput");
   inp.value = "";
+  inp.closest(".phrase-field").classList.remove("match");
   $("#phraseConfirm").disabled = true;
   $("#phraseModal").classList.remove("hidden");
   inp.focus();
@@ -52,7 +53,9 @@ function bindPhraseModal() {
   const inp = $("#phraseInput");
   inp.addEventListener("paste", (e) => e.preventDefault());
   inp.addEventListener("input", () => {
-    $("#phraseConfirm").disabled = !phraseMatches(inp.value, modalPhrase);
+    const ok = phraseMatches(inp.value, modalPhrase);
+    $("#phraseConfirm").disabled = !ok;
+    inp.closest(".phrase-field").classList.toggle("match", ok);
   });
   $("#phraseCancel").addEventListener("click", () => {
     pendingApply = null;

@@ -164,6 +164,7 @@ function openDisableModal(settings) {
       : "It stays off until you turn it back on.";
   const inp = $("#disablePhraseInput");
   inp.value = "";
+  inp.closest(".phrase-field").classList.remove("match");
   $("#disableConfirm").disabled = true;
   $("#disableModal").classList.remove("hidden");
   inp.focus();
@@ -175,7 +176,9 @@ function closeDisableModal() {
 
 $("#disablePhraseInput").addEventListener("paste", (e) => e.preventDefault());
 $("#disablePhraseInput").addEventListener("input", () => {
-  $("#disableConfirm").disabled = !phraseMatches($("#disablePhraseInput").value, activePhrase);
+  const ok = phraseMatches($("#disablePhraseInput").value, activePhrase);
+  $("#disableConfirm").disabled = !ok;
+  $("#disablePhraseInput").closest(".phrase-field").classList.toggle("match", ok);
 });
 $("#disableCancel").addEventListener("click", () => {
   closeDisableModal();

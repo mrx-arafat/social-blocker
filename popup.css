@@ -109,26 +109,54 @@ body {
 
 /* Disable-confirmation gate */
 .pop-btn.warn { background: var(--warn); color: #fff; }
+.pop-btn.warn:disabled { background: var(--surface); color: var(--muted); }
 .modal {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
-  display: grid; place-items: center; z-index: 50; padding: 16px;
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+  display: grid; place-items: center; z-index: 50; padding: 14px;
+  animation: modal-fade 0.18s ease both;
 }
 .modal.hidden { display: none; }
 .modal-box {
   background: var(--bg); border: 1px solid var(--line);
-  border-radius: 16px; padding: 18px; width: 100%;
+  border-radius: 20px; padding: 22px 18px; width: 100%; text-align: center;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  animation: modal-pop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
-.modal-box h2 { margin: 0 0 6px; font-size: 16px; }
-.modal-box p { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.modal-emoji {
+  width: 46px; height: 46px; margin: 0 auto 10px;
+  display: grid; place-items: center; font-size: 24px;
+  background: var(--surface); border-radius: 50%;
+}
+.modal-box h2 { margin: 0 0 4px; font-size: 17px; }
+.modal-box .modal-lead { margin: 0 0 12px; font-size: 13px; color: var(--muted); }
 .modal-box .phrase-text {
-  font-weight: 600; color: var(--ink); user-select: none;
-  background: var(--surface); border-radius: 10px; padding: 9px 11px;
+  font-weight: 600; color: var(--ink); user-select: none; font-size: 13.5px;
+  background: var(--surface); border-radius: 12px; padding: 11px 12px;
+  margin: 0 0 10px; line-height: 1.35;
 }
+.phrase-field { position: relative; margin-bottom: 8px; }
 #disablePhraseInput {
-  width: 100%; padding: 10px 11px; font-size: 13px;
-  border: 1px solid var(--line); border-radius: 10px;
-  background: var(--surface); color: var(--ink); margin-bottom: 8px;
+  width: 100%; padding: 11px 34px 11px 12px; font-size: 13.5px;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--bg); color: var(--ink); outline: none;
+  transition: border-color 0.15s ease;
 }
-.modal-note { min-height: 1em; font-size: 12px; }
+#disablePhraseInput:focus { border-color: var(--ink); }
+.phrase-field.match #disablePhraseInput { border-color: #1aa06d; }
+.phrase-check {
+  position: absolute; right: 11px; top: 50%;
+  transform: translateY(-50%) scale(0.6);
+  color: #1aa06d; font-weight: 700; opacity: 0; transition: 0.15s ease;
+}
+.phrase-field.match .phrase-check { opacity: 1; transform: translateY(-50%) scale(1); }
+.modal-note { min-height: 1em; margin: 0 0 14px; font-size: 12px; color: var(--muted); }
 .modal-actions { display: flex; gap: 8px; }
 .modal-actions .pop-btn { margin-bottom: 0; }
+@keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal-box { animation: none; }
+}
