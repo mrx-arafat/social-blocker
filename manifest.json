@@ -34,7 +34,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["pause.html"],
+      "resources": ["pause.html", "src/mascot.js", "icons/mascot/*.svg"],
       "matches": ["<all_urls>"]
     }
   ],
@@ -55,6 +55,22 @@
       "js": ["content/feeds.js"],
       "css": ["content/feeds.css"],
       "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "*://*.instagram.com/*",
+        "*://*.youtube.com/*",
+        "*://*.facebook.com/*",
+        "*://*.twitter.com/*",
+        "*://*.x.com/*",
+        "*://*.tiktok.com/*",
+        "*://*.reddit.com/*",
+        "*://*.snapchat.com/*",
+        "*://*.linkedin.com/*"
+      ],
+      "js": ["content/mascot.js"],
+      "run_at": "document_idle",
       "all_frames": false
     }
   ]

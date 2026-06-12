@@ -1,5 +1,6 @@
 import { getSettings, getAllStats, todayKey } from "./src/storage.js";
 import { applyTheme } from "./src/theme.js";
+import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -158,6 +159,23 @@ async function init() {
 
   // Reflection rotates by ISO week so it changes weekly, not per visit.
   $("#reflection").textContent = REFLECTIONS[isoWeek(now) % REFLECTIONS.length];
+
+  // Koala sums up the week — heart-eyes on a healthy streak, chill otherwise.
+  if (settings.mascot?.enabled) {
+    const ctx = {
+      event: streak >= 3 ? "milestone" : null,
+      onSocialSite: false,
+      streak,
+      minutesToday: 0,
+      domain: ""
+    };
+    const mood = pickMood(ctx);
+    renderMascot($("#mascot"), {
+      mood,
+      line: mascotLine(mood, ctx),
+      name: settings.mascot.name
+    });
+  }
 }
 
 init();

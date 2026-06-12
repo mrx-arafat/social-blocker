@@ -80,6 +80,9 @@ export const DEFAULTS = {
   reclaimedMin: 0,
   // Weekly recap: day 0 = Sunday, hour in local time.
   recap: { enabled: true, day: 0, hour: 19 },
+  // Koala buddy: shown on extension pages; overlayEnabled also floats it
+  // on guarded sites.
+  mascot: { name: "Koby", enabled: true, overlayEnabled: true },
   // UI theme for all extension pages: "light" | "dark".
   theme: "light"
 };
@@ -102,6 +105,7 @@ export async function getSettings() {
   if (!Array.isArray(merged.schedule.windows)) merged.schedule.windows = [];
   merged.streak = { ...DEFAULTS.streak, ...(stored.streak || {}) };
   merged.recap = { ...DEFAULTS.recap, ...(stored.recap || {}) };
+  merged.mascot = { ...DEFAULTS.mascot, ...(stored.mascot || {}) };
   if (!Array.isArray(merged.sites)) merged.sites = DEFAULTS.sites;
   if (!Array.isArray(merged.intentions)) merged.intentions = DEFAULTS.intentions;
   if (!Array.isArray(merged.alternatives)) merged.alternatives = DEFAULTS.alternatives;

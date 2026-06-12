@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="options.css" />
+    <link rel="stylesheet" href="mascot.css" />
     <title>Social Blocker — Settings</title>
   </head>
   <body>
@@ -171,6 +172,37 @@
           <label class="feed-item">
             <input type="checkbox" id="feed_xForYou" />
             <span>X "For you" tab</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Koala buddy -->
+      <section class="card">
+        <h2>Your buddy</h2>
+        <p class="card-sub">A koala that cheers your wins and sulks at doomscrolling.</p>
+        <div id="mascotPreview" style="margin-bottom: 12px;"></div>
+        <div class="field column">
+          <label for="mascotName">Name</label>
+          <input type="text" id="mascotName" class="text-input" maxlength="20" />
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="mascotEnabled">Show buddy</label>
+            <span class="hint">On the popup, pause screen and recap.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="mascotEnabled" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="mascotOverlayEnabled">Keep on screen</label>
+            <span class="hint">Float the buddy on guarded sites while you browse them.</span>
+          </div>
+          <label class="switch sm">
+            <input type="checkbox" id="mascotOverlayEnabled" />
+            <span class="slider"></span>
           </label>
         </div>
       </section>

@@ -1,6 +1,7 @@
 import { getSettings, saveSettings, getTodayStats } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
+import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
 
 const $ = (s) => document.querySelector(s);
 
@@ -37,6 +38,29 @@ async function render() {
 
   renderSiteToday(settings, day);
   renderStrictBtn(settings);
+  renderBuddy(settings, streak);
+}
+
+// Koala greets from the popup — heart-eyes on a healthy streak, chill otherwise.
+function renderBuddy(settings, streak) {
+  const host = $("#mascot");
+  if (!settings.mascot?.enabled) {
+    host.innerHTML = "";
+    return;
+  }
+  const ctx = {
+    event: streak >= 3 ? "milestone" : null,
+    onSocialSite: false,
+    streak,
+    minutesToday: 0,
+    domain: ""
+  };
+  const mood = pickMood(ctx);
+  renderMascot(host, {
+    mood,
+    line: mascotLine(mood, ctx),
+    name: settings.mascot.name
+  });
 }
 
 // Today's per-site numbers — same getTodayStats() the options page uses,

@@ -2,6 +2,7 @@ import { getSettings, getTodayStats, getAllStats, todayKey } from "./src/storage
 import { pickMessage } from "./src/messages.js";
 import { medianSessionMin } from "./src/streak.js";
 import { applyTheme } from "./src/theme.js";
+import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
 
 const params = new URLSearchParams(location.search);
 const domain = params.get("domain") || "this site";
@@ -83,8 +84,35 @@ async function stepAway() {
     el.doneSub.textContent =
       `≈ ${res.credited}m reclaimed. Total: ${fmtH(fresh.reclaimedMin || 0)}.`;
   }
+  renderBuddy({ event: "stepAway" });
   show(el.donePhase);
 }
+
+// Koala in the corner: worried while you're deciding, heart-eyes the moment
+// you step away.
+function renderBuddy(over = {}) {
+  const host = document.querySelector("#mascot");
+  if (!settings.mascot?.enabled) {
+    host.innerHTML = "";
+    return;
+  }
+  const ctx = {
+    event: null,
+    onSocialSite: true,
+    streak: settings.streak?.current || 0,
+    minutesToday: buddyMinutesToday,
+    domain,
+    ...over
+  };
+  const mood = pickMood(ctx);
+  renderMascot(host, {
+    mood,
+    line: mascotLine(mood, ctx),
+    name: settings.mascot.name
+  });
+}
+
+let buddyMinutesToday = 0;
 
 function pickAlternative() {
   const list = settings.alternatives || [];
@@ -278,6 +306,9 @@ async function init() {
   }
   const all = await getAllStats();
   el.psyMessage.textContent = pickMessage(messageContext(all, day, streak));
+
+  buddyMinutesToday = Math.round((day.time[domain] || 0) / 60);
+  renderBuddy();
 
   if (mode === "strict") {
     renderStrict();

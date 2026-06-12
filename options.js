@@ -9,6 +9,7 @@ import {
 } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
+import { renderMascot, DEFAULT_MASCOT_NAME } from "./src/mascot.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
@@ -547,6 +548,40 @@ async function renderStats() {
   });
 }
 
+// ---- koala buddy --------------------------------------------------------------
+function bindMascot() {
+  const preview = () =>
+    renderMascot($("#mascotPreview"), {
+      mood: "cool",
+      line: `Hi! I'm ${settings.mascot.name || DEFAULT_MASCOT_NAME}.`,
+      name: settings.mascot.name
+    });
+  preview();
+
+  const name = $("#mascotName");
+  name.value = settings.mascot.name;
+  name.addEventListener("change", () => {
+    settings.mascot.name = name.value.trim() || DEFAULT_MASCOT_NAME;
+    name.value = settings.mascot.name;
+    preview();
+    persist();
+  });
+
+  const en = $("#mascotEnabled");
+  en.checked = settings.mascot.enabled;
+  en.addEventListener("change", () => {
+    settings.mascot.enabled = en.checked;
+    persist();
+  });
+
+  const overlay = $("#mascotOverlayEnabled");
+  overlay.checked = settings.mascot.overlayEnabled;
+  overlay.addEventListener("change", () => {
+    settings.mascot.overlayEnabled = overlay.checked;
+    persist();
+  });
+}
+
 // ---- init -------------------------------------------------------------------
 async function init() {
   settings = await getSettings();
@@ -599,6 +634,7 @@ async function init() {
   bindBudget();
   bindSchedule();
   bindRecap();
+  bindMascot();
 
   await renderToday();
   await renderStats();
