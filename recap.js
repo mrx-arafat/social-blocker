@@ -160,10 +160,12 @@ async function init() {
   // Reflection rotates by ISO week so it changes weekly, not per visit.
   $("#reflection").textContent = REFLECTIONS[isoWeek(now) % REFLECTIONS.length];
 
-  // Koala sums up the week — heart-eyes on a healthy streak, chill otherwise.
+  // Koala sums up the week — a party for a full calm week, diligent for a
+  // building streak, chill otherwise.
   if (settings.mascot?.enabled) {
     const ctx = {
-      event: streak >= 3 ? "milestone" : null,
+      event: streak >= 7 ? "milestone" : null,
+      offDuty: false,
       onSocialSite: false,
       streak,
       minutesToday: 0,

@@ -88,7 +88,7 @@ async function stepAway() {
   show(el.donePhase);
 }
 
-// Koala in the corner: worried while you're deciding, heart-eyes the moment
+// Koala in the corner: puzzled while you're deciding, heart-eyes the moment
 // you step away.
 function renderBuddy(over = {}) {
   const host = document.querySelector("#mascot");
@@ -97,7 +97,7 @@ function renderBuddy(over = {}) {
     return;
   }
   const ctx = {
-    event: null,
+    event: "deciding",
     onSocialSite: true,
     streak: settings.streak?.current || 0,
     minutesToday: buddyMinutesToday,

@@ -5,18 +5,30 @@
 export const MASCOT_ICONS = {
   angry: "icons/mascot/angry.svg",
   cool: "icons/mascot/cool.svg",
-  heartEyes: "icons/mascot/heart-eyes.svg"
+  heartEyes: "icons/mascot/heart-eyes.svg",
+  party: "icons/mascot/party.svg",
+  confused: "icons/mascot/confused.svg",
+  working: "icons/mascot/working.svg",
+  playing: "icons/mascot/playing.svg",
+  mad: "icons/mascot/mad.svg"
 };
 
 export const DEFAULT_MASCOT_NAME = "Koby";
 
-// Win events override everything; being on a guarded site trumps streak
-// pride; a healthy streak earns heart-eyes; otherwise chill.
-// ctx: { event, onSocialSite, streak, minutesToday, domain }
+// Priority, high to low:
+//   events       — milestone (party), step-away win (heart-eyes), deciding (confused)
+//   off duty     — protection is disabled, so the koala is just playing
+//   on a site    — mad past 20 min today, otherwise angry
+//   streak tiers — 7+ adoring (heart-eyes), 3+ diligent (working), else chill (cool)
+// ctx: { event, offDuty, onSocialSite, streak, minutesToday, domain }
 export function pickMood(ctx) {
-  if (ctx.event === "stepAway" || ctx.event === "milestone") return "heartEyes";
-  if (ctx.onSocialSite) return "angry";
-  if (ctx.streak >= 3) return "heartEyes";
+  if (ctx.event === "milestone") return "party";
+  if (ctx.event === "stepAway") return "heartEyes";
+  if (ctx.event === "deciding") return "confused";
+  if (ctx.offDuty) return "playing";
+  if (ctx.onSocialSite) return ctx.minutesToday >= 20 ? "mad" : "angry";
+  if (ctx.streak >= 7) return "heartEyes";
+  if (ctx.streak >= 3) return "working";
   return "cool";
 }
 
@@ -43,6 +55,24 @@ const LINES = {
     "Really? This site again?",
     "I'm watching you scroll. Just saying.",
     "You said you'd be quick. Clock's ticking."
+  ],
+  confused: [
+    "Wait… do you actually need this?",
+    "Hmm. What were you doing a minute ago?",
+    "You sure? You don't look sure.",
+    "I'm confused. Was this a decision or a reflex?"
+  ],
+  working: [
+    "Heads down. We're getting things done.",
+    "Look at us, being productive.",
+    "Focus mode. I'm right here with you.",
+    "Keep it up — momentum looks good on you."
+  ],
+  playing: [
+    "Off duty! Guess we're playing now.",
+    "Protection's off, so… wheee?",
+    "No rules right now. Don't make me regret it.",
+    "I'll be over here goofing off till you're back."
   ]
 };
 
@@ -55,19 +85,20 @@ function pick(pool, rand) {
   return pool[Math.floor(rand() * pool.length)];
 }
 
-// What the koala says for a mood. Angry escalates once the visit stops
-// being "quick" (20+ minutes today on this site).
+// What the koala says for a mood. The mad line calls out the time sunk into
+// the site today — factual, not shaming.
 export function mascotLine(mood, ctx, rand = Math.random) {
   if (ctx.event === "stepAway") return pick(LINES.stepAway, rand);
   if (ctx.event === "milestone") {
     return `${ctx.streak} calm days in a row! That's my human!`;
   }
-  if (mood === "angry") {
-    if (ctx.minutesToday >= 20) {
-      return `${fmtMin(ctx.minutesToday)} on ${ctx.domain} today. I'm not mad. Okay, I'm a little mad.`;
-    }
-    return pick(LINES.angryMild, rand);
+  if (mood === "mad") {
+    return `${fmtMin(ctx.minutesToday)} on ${ctx.domain} today. Okay, now I'm mad.`;
   }
+  if (mood === "confused") return pick(LINES.confused, rand);
+  if (mood === "angry") return pick(LINES.angryMild, rand);
+  if (mood === "working") return pick(LINES.working, rand);
+  if (mood === "playing") return pick(LINES.playing, rand);
   if (mood === "heartEyes") return pick(LINES.heartEyesIdle, rand);
   return pick(LINES.coolIdle, rand);
 }

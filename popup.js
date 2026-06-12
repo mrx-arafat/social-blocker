@@ -55,7 +55,8 @@ async function render() {
   renderBuddy(settings, streak);
 }
 
-// Koala greets from the popup — heart-eyes on a healthy streak, chill otherwise.
+// Koala greets from the popup: playing when protection is off, adoring on a
+// strong streak, diligent on a building one, chill otherwise.
 function renderBuddy(settings, streak) {
   const host = $("#mascot");
   if (!settings.mascot?.enabled) {
@@ -63,7 +64,8 @@ function renderBuddy(settings, streak) {
     return;
   }
   const ctx = {
-    event: streak >= 3 ? "milestone" : null,
+    event: null,
+    offDuty: !settings.enabled,
     onSocialSite: false,
     streak,
     minutesToday: 0,
