@@ -143,6 +143,27 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   });
 });
 
+// ---- mascot overlay injection -------------------------------------------------
+// Static content_scripts can't match user-added domains, so the koala is
+// injected programmatically into every committed top-frame navigation on a
+// guarded site. The content script itself handles the mascot toggles and
+// reacts to settings changes live, so injection only gates on "is guarded".
+
+chrome.webNavigation.onCommitted.addListener(async (details) => {
+  if (details.frameId !== 0) return;
+  if (!/^https?:\/\//i.test(details.url)) return;
+  const settings = await getSettings();
+  if (!findSite(settings, hostOf(details.url))) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: details.tabId },
+      files: ["content/mascot.js"]
+    });
+  } catch (e) {
+    // Tab already gone or page not scriptable (e.g. error pages) — fine.
+  }
+});
+
 // ---- message API (from pause page, popup, options, content) -----------------
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {

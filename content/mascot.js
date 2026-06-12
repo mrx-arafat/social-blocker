@@ -2,8 +2,15 @@
 // scripts). Floats the mascot bottom-right on guarded sites inside a
 // Shadow DOM so site CSS can't touch it. Mood logic lives in src/mascot.js,
 // pulled in via dynamic import (web_accessible_resources).
+//
+// Injected programmatically by background.js on navigation to any guarded
+// site (static manifest matches can't cover user-added domains).
 
 (function () {
+  // Background may inject more than once for the same document.
+  if (window.__sbMascotInjected) return;
+  window.__sbMascotInjected = true;
+
   const SETTINGS_KEY = "sb_settings";
   const STATS_KEY = "sb_stats";
   const BUBBLE_SHOW_DELAY_MS = 6000;
