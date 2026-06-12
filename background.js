@@ -14,6 +14,7 @@ import {
 import { resolveMode } from "./src/schedule.js";
 import { buildRules } from "./src/rules.js";
 import { rollStreak, medianSessionMin, prevDate } from "./src/streak.js";
+import { shouldAutoReenable } from "./src/disable-gate.js";
 
 // Decide why a guarded visit should be stopped, given today's stats.
 // Returns a reason ("openLimit" | "timeLimit") + limit, or null for a normal pause.
@@ -36,6 +37,7 @@ const REMINDER_ALARM = "sb_reminder";
 const TICK_ALARM = "sb_tick"; // 1-min sampler for time-on-site
 const RECAP_ALARM = "sb_recap"; // weekly recap notification
 const RECAP_NOTE_ID = "sb_recap_note";
+const REENABLE_ALARM = "sb_reenable"; // auto-heal a temporary disable
 
 // ---- temporary passes -------------------------------------------------------
 // Stored in session storage so they vanish on browser restart.
@@ -277,7 +279,12 @@ async function onTick() {
   await rollStreakIfNeeded();
   await syncRules(); // covers pass expiry + schedule boundaries within ≤1 min
 
-  const settings = await getSettings();
+  let settings = await getSettings();
+  // Safety net for a temporary disable whose alarm never fired (worker asleep).
+  if (shouldAutoReenable(settings, Date.now())) {
+    await reEnableNow();
+    settings = await getSettings();
+  }
   if (!settings.enabled) return;
 
   // Skip counting while the user is away from the keyboard.
@@ -331,6 +338,30 @@ async function scheduleReminder() {
   }
 }
 
+// ---- auto re-enable after a temporary disable --------------------------------
+// A disable is never permanent: schedule an alarm at disabledUntil so the
+// blocker switches itself back on even if every page is closed. If the target
+// has already passed (e.g. the worker was asleep), heal immediately.
+
+async function reEnableNow() {
+  const settings = await getSettings();
+  if (settings.enabled) return;
+  settings.enabled = true;
+  settings.disabledUntil = 0;
+  await saveSettings(settings); // storage.onChanged rebuilds rules
+}
+
+async function scheduleReenable() {
+  await chrome.alarms.clear(REENABLE_ALARM);
+  const settings = await getSettings();
+  if (settings.enabled || !settings.disabledUntil) return;
+  if (shouldAutoReenable(settings, Date.now())) {
+    await reEnableNow();
+    return;
+  }
+  chrome.alarms.create(REENABLE_ALARM, { when: settings.disabledUntil });
+}
+
 // ---- weekly recap -------------------------------------------------------------
 
 async function scheduleRecap() {
@@ -356,6 +387,7 @@ chrome.notifications.onClicked.addListener((id) => {
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === TICK_ALARM) return onTick();
+  if (alarm.name === REENABLE_ALARM) return reEnableNow();
   if (alarm.name === RECAP_ALARM) {
     chrome.notifications.create(RECAP_NOTE_ID, {
       type: "basic",
@@ -383,6 +415,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.sb_settings) {
     scheduleReminder();
     scheduleRecap();
+    scheduleReenable();
     syncRules();
   }
 });
@@ -395,6 +428,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   ensureTick();
   await scheduleReminder();
   await scheduleRecap();
+  await scheduleReenable();
   await syncRules();
   if (details && details.reason === "install") {
     chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
@@ -404,5 +438,6 @@ chrome.runtime.onStartup.addListener(async () => {
   ensureTick();
   await scheduleReminder();
   await scheduleRecap();
+  await scheduleReenable();
   await syncRules();
 });

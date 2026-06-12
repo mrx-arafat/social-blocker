@@ -10,23 +10,24 @@ import {
 import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
 import { renderMascot, DEFAULT_MASCOT_NAME } from "./src/mascot.js";
+import { phraseMatches, reenableAt } from "./src/disable-gate.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
 
-// ---- strict phrase gate -------------------------------------------------------
-// While strict hours are active, any change that weakens strict protection
-// (master off, schedule off, editing/removing windows, removing sites) must be
-// confirmed by typing the unlock phrase. Paste is blocked.
+// ---- typed-phrase confirmation gate ------------------------------------------
+// Weakening protection (turning the blocker off, or strict-weakening edits while
+// strict hours are active) requires typing a phrase exactly — paste blocked. The
+// phrase and copy vary by context; the modal itself is generic.
 let pendingApply = null;
+let modalPhrase = "";
 
-function guardStrict(applyFn) {
-  if (!strictActive(settings)) {
-    applyFn();
-    return;
-  }
+function confirmWithPhrase(phrase, applyFn, copy = {}) {
   pendingApply = applyFn;
-  $("#phraseText").textContent = settings.strictPhrase;
+  modalPhrase = phrase;
+  $("#phraseTitle").textContent = copy.title || "Are you sure?";
+  $("#phraseBody").textContent = copy.body || "To confirm, type this exactly:";
+  $("#phraseText").textContent = phrase;
   const inp = $("#phraseInput");
   inp.value = "";
   $("#phraseConfirm").disabled = true;
@@ -34,11 +35,24 @@ function guardStrict(applyFn) {
   inp.focus();
 }
 
+// Strict-hours guard for protection-weakening edits other than the master toggle
+// (schedule off, editing/removing windows, removing sites).
+function guardStrict(applyFn) {
+  if (!strictActive(settings)) {
+    applyFn();
+    return;
+  }
+  confirmWithPhrase(settings.strictPhrase, applyFn, {
+    title: "Strict hours are active",
+    body: "To weaken strict protection right now, type this exactly:"
+  });
+}
+
 function bindPhraseModal() {
   const inp = $("#phraseInput");
   inp.addEventListener("paste", (e) => e.preventDefault());
   inp.addEventListener("input", () => {
-    $("#phraseConfirm").disabled = inp.value !== settings.strictPhrase;
+    $("#phraseConfirm").disabled = !phraseMatches(inp.value, modalPhrase);
   });
   $("#phraseCancel").addEventListener("click", () => {
     pendingApply = null;
@@ -46,7 +60,7 @@ function bindPhraseModal() {
     location.reload();
   });
   $("#phraseConfirm").addEventListener("click", () => {
-    if (inp.value !== settings.strictPhrase) return;
+    if (!phraseMatches(inp.value, modalPhrase)) return;
     $("#phraseModal").classList.add("hidden");
     const fn = pendingApply;
     pendingApply = null;
@@ -582,6 +596,33 @@ function bindMascot() {
   });
 }
 
+// ---- disable friction --------------------------------------------------------
+function bindDisableGate() {
+  const phrase = $("#disablePhrase");
+  phrase.value = settings.disablePhrase;
+  phrase.addEventListener("change", () => {
+    const v = phrase.value.trim();
+    if (!v) {
+      // An empty phrase would make the gate un-satisfiable — never allow it.
+      phrase.value = settings.disablePhrase;
+      return;
+    }
+    settings.disablePhrase = v;
+    persist();
+  });
+
+  const mins = $("#disableMinutes");
+  const out = $("#disableMinutesOut");
+  const fmt = (v) => (Number(v) === 0 ? "off" : v + "m");
+  mins.value = settings.disableMinutes;
+  out.textContent = fmt(settings.disableMinutes);
+  mins.addEventListener("input", () => (out.textContent = fmt(mins.value)));
+  mins.addEventListener("change", () => {
+    settings.disableMinutes = Number(mins.value);
+    persist();
+  });
+}
+
 // ---- init -------------------------------------------------------------------
 async function init() {
   settings = await getSettings();
@@ -601,16 +642,29 @@ async function init() {
   const master = $("#masterToggle");
   master.checked = settings.enabled;
   master.onchange = () => {
-    if (!master.checked) {
-      guardStrict(() => {
-        settings.enabled = false;
-        persist();
-      });
-      master.checked = settings.enabled;
+    // Re-enabling is frictionless and cancels any pending auto-re-enable.
+    if (master.checked) {
+      settings.enabled = true;
+      settings.disabledUntil = 0;
+      persist();
       return;
     }
-    settings.enabled = true;
-    persist();
+    // Disabling always needs the typed phrase: the strict phrase during strict
+    // hours, the disable phrase otherwise. Either way it's a temporary "off".
+    const strict = strictActive(settings);
+    confirmWithPhrase(
+      strict ? settings.strictPhrase : settings.disablePhrase,
+      () => {
+        settings.enabled = false;
+        settings.disabledUntil = reenableAt(Date.now(), settings.disableMinutes || 0);
+        master.checked = false;
+        persist();
+      },
+      strict
+        ? { title: "Strict hours are active", body: "To turn protection off right now, type this exactly:" }
+        : { title: "Turn protection off?", body: "Pause first. To turn it off, type this exactly:" }
+    );
+    master.checked = settings.enabled; // stay on until the phrase is confirmed
   };
   bindRange("pauseSeconds", "pauseSecondsOut", "pauseSeconds", "s");
   bindToggle("escalatePause", "escalatePause");
@@ -635,6 +689,7 @@ async function init() {
   bindSchedule();
   bindRecap();
   bindMascot();
+  bindDisableGate();
 
   await renderToday();
   await renderStats();

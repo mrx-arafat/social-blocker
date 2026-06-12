@@ -7,6 +7,13 @@ export const STATS_KEY = "sb_stats";
 // A "site" entry: domain + per-site limits. Feed toggles live under `feeds`.
 export const DEFAULTS = {
   enabled: true,
+  // Turning the blocker off is the one impulsive escape hatch, so it's gated:
+  // the user must hand-type disablePhrase (paste blocked), and "off" only lasts
+  // disableMinutes before it heals itself. disabledUntil is the epoch-ms target
+  // for that auto-re-enable (0 = currently on, or disabled indefinitely).
+  disablePhrase: "I choose to be distracted right now",
+  disableMinutes: 30, // 0 = stays off until manually re-enabled
+  disabledUntil: 0,
   // Base length of the forced breath, in seconds.
   pauseSeconds: 8,
   // Escalating friction: each time you reopen the same site today, the breath

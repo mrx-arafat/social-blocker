@@ -53,6 +53,22 @@
 
     <button id="strictNow" class="pop-btn ghost">Strict now — 1h</button>
     <button id="openOptions" class="pop-btn">Settings &amp; blocked sites</button>
+
+    <!-- Disable-confirmation gate -->
+    <div id="disableModal" class="modal hidden">
+      <div class="modal-box">
+        <h2>Turn protection off?</h2>
+        <p>Pause first. To turn it off, type this exactly:</p>
+        <p class="phrase-text" id="disablePhraseText"></p>
+        <input type="text" id="disablePhraseInput" autocomplete="off" spellcheck="false"
+               placeholder="Type the phrase" />
+        <p class="modal-note" id="disableNote"></p>
+        <div class="modal-actions">
+          <button id="disableCancel" class="pop-btn ghost" type="button">Keep it on</button>
+          <button id="disableConfirm" class="pop-btn warn" type="button" disabled>Turn off</button>
+        </div>
+      </div>
+    </div>
   </body>
   <script type="module" src="popup.js"></script>
 </html>

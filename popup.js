@@ -2,12 +2,18 @@ import { getSettings, saveSettings, getTodayStats } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
 import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
+import { phraseMatches, reenableAt, disableRemainingMs } from "./src/disable-gate.js";
 
 const $ = (s) => document.querySelector(s);
 
 function fmtH(min) {
   const h = Math.floor(min / 60), m = Math.round(min % 60);
   return h ? `${h}h${m ? " " + m + "m" : ""}` : `${m}m`;
+}
+
+function fmtClock(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 async function render() {
@@ -35,6 +41,14 @@ async function render() {
         day.dismissed
       } ended in stepping away.`
     : "No interruptions yet today.";
+
+  // When protection is off, that's the headline — say when it returns.
+  if (!settings.enabled) {
+    $("#todayNote").textContent =
+      disableRemainingMs(settings, Date.now()) > 0
+        ? `Protection off — back on at ${fmtClock(settings.disabledUntil)}.`
+        : "Protection is off.";
+  }
 
   renderSiteToday(settings, day);
   renderStrictBtn(settings);
@@ -111,17 +125,70 @@ function renderStrictBtn(settings) {
   }
 }
 
+// Phrase captured when the disable modal opens, so keystroke checks don't race
+// against storage reads.
+let activePhrase = "";
+
 $("#masterToggle").addEventListener("change", async (e) => {
   const settings = await getSettings();
-  // Turning everything off while strict hours are active would bypass strict
-  // mode — that path goes through the options page and the typed phrase.
-  if (!e.target.checked && strictActive(settings)) {
+
+  // Turning it back on is frictionless — and cancels any pending auto-re-enable.
+  if (e.target.checked) {
+    settings.enabled = true;
+    settings.disabledUntil = 0;
+    await saveSettings(settings);
+    render();
+    return;
+  }
+
+  // Disabling during strict hours stays blocked — that path needs the strict
+  // phrase on the options page.
+  if (strictActive(settings)) {
     e.target.checked = true;
     $("#todayNote").textContent = "Strict hours — disable from Settings (phrase required).";
     return;
   }
-  settings.enabled = e.target.checked;
+
+  // Otherwise don't disable yet: revert the toggle and make them type first.
+  e.target.checked = true;
+  openDisableModal(settings);
+});
+
+function openDisableModal(settings) {
+  activePhrase = settings.disablePhrase;
+  $("#disablePhraseText").textContent = settings.disablePhrase;
+  const mins = settings.disableMinutes || 0;
+  $("#disableNote").textContent =
+    mins > 0
+      ? `It switches back on automatically after ${mins} min.`
+      : "It stays off until you turn it back on.";
+  const inp = $("#disablePhraseInput");
+  inp.value = "";
+  $("#disableConfirm").disabled = true;
+  $("#disableModal").classList.remove("hidden");
+  inp.focus();
+}
+
+function closeDisableModal() {
+  $("#disableModal").classList.add("hidden");
+}
+
+$("#disablePhraseInput").addEventListener("paste", (e) => e.preventDefault());
+$("#disablePhraseInput").addEventListener("input", () => {
+  $("#disableConfirm").disabled = !phraseMatches($("#disablePhraseInput").value, activePhrase);
+});
+$("#disableCancel").addEventListener("click", () => {
+  closeDisableModal();
+  render();
+});
+$("#disableConfirm").addEventListener("click", async () => {
+  if (!phraseMatches($("#disablePhraseInput").value, activePhrase)) return;
+  const settings = await getSettings();
+  settings.enabled = false;
+  settings.disabledUntil = reenableAt(Date.now(), settings.disableMinutes || 0);
   await saveSettings(settings);
+  closeDisableModal();
+  render();
 });
 
 $("#strictNow").addEventListener("click", async () => {

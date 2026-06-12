@@ -152,6 +152,26 @@
         </form>
       </section>
 
+      <!-- Turning it off -->
+      <section class="card">
+        <h2>Turning it off</h2>
+        <p class="card-sub">Make quitting deliberate. You type this phrase to turn protection off, and it switches itself back on after a while.</p>
+        <div class="field column">
+          <label for="disablePhrase">Confirmation phrase</label>
+          <input type="text" id="disablePhrase" class="text-input" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="field">
+          <div class="field-text">
+            <label for="disableMinutes">Auto re-enable after</label>
+            <span class="hint">It turns itself back on after this long. 0 = stays off until you re-enable.</span>
+          </div>
+          <div class="field-control">
+            <input type="range" id="disableMinutes" min="0" max="240" step="5" />
+            <output id="disableMinutesOut" class="out">30m</output>
+          </div>
+        </div>
+      </section>
+
       <!-- Feed blocking -->
       <section class="card">
         <h2>Feed blocking</h2>
@@ -323,8 +343,8 @@
     <!-- Strict unlock phrase modal -->
     <div id="phraseModal" class="modal hidden">
       <div class="modal-box">
-        <h2>Strict hours are active</h2>
-        <p>To weaken strict protection right now, type this exactly:</p>
+        <h2 id="phraseTitle">Strict hours are active</h2>
+        <p id="phraseBody">To weaken strict protection right now, type this exactly:</p>
         <p class="phrase-text" id="phraseText"></p>
         <input type="text" id="phraseInput" autocomplete="off" spellcheck="false"
                placeholder="Type the phrase" />
