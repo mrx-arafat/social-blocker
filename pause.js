@@ -1,4 +1,4 @@
-import { getSettings, getTodayStats, getAllStats, getLastIntention, todayKey } from "./src/storage.js";
+import { getSettings, getTodayStats, getAllStats, getLastIntention, normalizeDomain, hostMatchesDomain, todayKey } from "./src/storage.js";
 import { pickMessage } from "./src/messages.js";
 import { replayLine } from "./src/insights.js";
 import { medianSessionMin } from "./src/streak.js";
@@ -6,7 +6,10 @@ import { applyTheme } from "./src/theme.js";
 import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
 
 const params = new URLSearchParams(location.search);
-const domain = params.get("domain") || "this site";
+// pause.html is web-accessible, so the query is attacker-reachable. Normalise
+// the domain to a plausible hostname (or a safe placeholder) before it ever
+// touches the DOM or a redirect.
+const domain = normalizeDomain(params.get("domain")) || "this site";
 const reason = params.get("reason") || ""; // "", "timeLimit", "openLimit"
 const limitParam = params.get("limit"); // numeric string or null
 
@@ -177,18 +180,25 @@ async function onContinue() {
     intention: chosenIntention
   });
   if (res && res.ok) {
-    if (/^https?:\/\//i.test(target)) {
-      location.replace(target);
-    } else {
-      location.replace("https://" + domain);
-    }
+    // Only follow the original URL if it's http(s) AND its host belongs to the
+    // domain we're unblocking — otherwise fall back to the domain root. Stops
+    // the web-accessible pause page being used as an open redirect.
+    let dest = "https://" + domain;
+    try {
+      const u = new URL(target);
+      if (/^https?:$/.test(u.protocol) && hostMatchesDomain(u.hostname, domain)) {
+        dest = u.href;
+      }
+    } catch { /* malformed target — use the safe fallback */ }
+    location.replace(dest);
   } else if (res && res.blocked === "strict") {
     renderStrict();
   } else if (res && res.blocked) {
     showLimit(res.blocked, res.limit);
   } else {
     el.continueBtn.disabled = false;
-    el.continueBtn.innerHTML = `Continue to <span class="domain-label">${domain}</span>`;
+    el.continueBtn.textContent = "";
+    el.continueBtn.append("Continue to ", Object.assign(document.createElement("span"), { className: "domain-label", textContent: domain }));
   }
 }
 
@@ -346,8 +356,12 @@ function breathSeconds(settings, day) {
   const secs = base + opensToday * (settings.escalateStep || 0);
   const capped = Math.min(secs, settings.escalateMax || 60);
   if (opensToday > 0) {
-    el.breatheSub.innerHTML =
-      `Opening <b>${domain}</b> again — breathe a little longer this time.`;
+    el.breatheSub.textContent = "";
+    el.breatheSub.append(
+      "Opening ",
+      Object.assign(document.createElement("b"), { textContent: domain }),
+      " again — breathe a little longer this time."
+    );
   }
   return capped;
 }

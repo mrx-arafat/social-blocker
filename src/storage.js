@@ -186,11 +186,22 @@ export async function getLastIntention(domain) {
   return all[domain] || null;
 }
 
+// Cap the per-domain intention map so it can't grow without bound (e.g. after
+// many distinct guarded domains over time). Keep the most recently used.
+const LASTINTENT_MAX = 50;
+
 export async function setLastIntention(domain, text, ts = Date.now()) {
   const t = (text || "").trim();
   if (!domain || !t) return;
   const all = await getLastIntentions();
   all[domain] = { text: t, ts };
+  const keys = Object.keys(all);
+  if (keys.length > LASTINTENT_MAX) {
+    keys
+      .sort((a, b) => (all[a].ts || 0) - (all[b].ts || 0))
+      .slice(0, keys.length - LASTINTENT_MAX)
+      .forEach((k) => delete all[k]);
+  }
   await chrome.storage.local.set({ [LASTINTENT_KEY]: all });
 }
 
@@ -211,12 +222,19 @@ export function findSite(settings, host) {
   );
 }
 
+// Multi-label hostname shape: labels of [a-z0-9-] (no leading/trailing hyphen),
+// at least two labels (so a bare "com" can't become an over-broad guard rule).
+const HOSTNAME_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
 export function normalizeDomain(input) {
   let s = (input || "").trim().toLowerCase();
   if (!s) return "";
-  // Strip scheme, path, www.
+  // Strip scheme, path/query, port, www.
   s = s.replace(/^[a-z]+:\/\//, "");
-  s = s.split("/")[0];
+  s = s.split(/[/?#]/)[0];
+  s = s.split(":")[0];
   s = s.replace(/^www\./, "");
-  return s;
+  // Reject anything that isn't a plausible hostname — keeps junk like "*",
+  // "a b" or markup out of the guarded-sites list and the DNR regex.
+  return HOSTNAME_RE.test(s) ? s : "";
 }
