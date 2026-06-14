@@ -163,6 +163,18 @@ html, body {
 }
 .psy-message:empty { display: none; }
 
+.replay-note {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 42ch;
+  margin: 12px auto 0;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.replay-note.hidden { display: none; }
+
 .strict-note {
   font-size: 14px;
   font-weight: 600;

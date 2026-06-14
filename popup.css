@@ -93,6 +93,14 @@ body {
 .psy-num { font-size: 20px; font-weight: 700; line-height: 1.1; }
 .psy-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .psy-sub { font-size: 10px; color: var(--muted); }
+.jar-fill {
+  margin: 8px 6px 0; height: 5px; border-radius: 999px;
+  background: var(--line); overflow: hidden;
+}
+.jar-fill span {
+  display: block; height: 100%; width: 0;
+  background: #30a14e; border-radius: 999px; transition: width 0.4s ease;
+}
 
 /* v2: today's per-site usage */
 .site-today { margin: 0 0 12px; }

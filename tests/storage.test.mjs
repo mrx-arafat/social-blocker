@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { installChromeMock } from "./mock-chrome.mjs";
 installChromeMock();
-const { getTodayStats, emptyDay, mutateDay, getSettings } = await import("../src/storage.js");
+const { getTodayStats, emptyDay, mutateDay, getSettings, getLastIntention, setLastIntention } = await import("../src/storage.js");
 
 test("emptyDay has opensByHour buckets", () => {
   const d = emptyDay();
@@ -34,4 +34,17 @@ test("getSettings merges v2 defaults", async () => {
   assert.equal(s.reclaimedMin, 0);
   assert.equal(s.recap.enabled, true);
   assert.equal(s.theme, "light");
+});
+
+test("last intention round-trips per domain", async () => {
+  assert.equal(await getLastIntention("x.com"), null);
+  await setLastIntention("x.com", "just curious", 1000);
+  assert.deepEqual(await getLastIntention("x.com"), { text: "just curious", ts: 1000 });
+});
+
+test("setLastIntention trims and ignores empty/blank", async () => {
+  await setLastIntention("reddit.com", "  boredom  ", 2000);
+  assert.deepEqual(await getLastIntention("reddit.com"), { text: "boredom", ts: 2000 });
+  await setLastIntention("reddit.com", "   ", 3000); // blank — no overwrite
+  assert.equal((await getLastIntention("reddit.com")).text, "boredom");
 });

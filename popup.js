@@ -28,7 +28,11 @@ async function render() {
   $("#pStreak").textContent = streak ? `🔥 ${streak}` : "0";
   $("#pBest").textContent =
     settings.streak?.best > 1 ? `best: ${settings.streak.best}` : "";
-  $("#pReclaimed").textContent = fmtH(settings.reclaimedMin || 0);
+  const reclaimed = settings.reclaimedMin || 0;
+  $("#pReclaimed").textContent = fmtH(reclaimed);
+  // Jar fills over a soft 2h target — tangible, keeps growing visibly early on.
+  const jar = $("#jarFill");
+  if (jar) jar.style.width = Math.min(100, (reclaimed / 120) * 100) + "%";
 
   $("#sAttempts").textContent = day.attempts;
   $("#sDismissed").textContent = day.dismissed;

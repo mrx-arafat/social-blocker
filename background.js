@@ -9,6 +9,7 @@ import {
   mutateDay,
   getDayStats,
   getAllStats,
+  setLastIntention,
   todayKey
 } from "./src/storage.js";
 import { resolveMode } from "./src/schedule.js";
@@ -173,7 +174,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     try {
       switch (msg.type) {
         case "GRANT_PASS":
-          sendResponse(await grantPass(msg.domain));
+          sendResponse(await grantPass(msg.domain, msg.intention));
           break;
         case "DISMISS":
           sendResponse(await recordDismiss(msg.domain));
@@ -209,7 +210,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true; // async response
 });
 
-async function grantPass(domain) {
+async function grantPass(domain, intention) {
   const settings = await getSettings();
   const site = settings.sites.find((s) => s.domain === domain);
   const day = await getDayStats();
@@ -233,6 +234,7 @@ async function grantPass(domain) {
     d.opens[domain] = (d.opens[domain] || 0) + 1;
     d.opensByHour[new Date().getHours()] += 1;
   });
+  if (intention) await setLastIntention(domain, intention);
   await syncRules(); // drop this domain's rule while the pass is live
   return { ok: true };
 }

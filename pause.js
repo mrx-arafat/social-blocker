@@ -1,5 +1,6 @@
-import { getSettings, getTodayStats, getAllStats, todayKey } from "./src/storage.js";
+import { getSettings, getTodayStats, getAllStats, getLastIntention, todayKey } from "./src/storage.js";
 import { pickMessage } from "./src/messages.js";
+import { replayLine } from "./src/insights.js";
 import { medianSessionMin } from "./src/streak.js";
 import { applyTheme } from "./src/theme.js";
 import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
@@ -28,6 +29,7 @@ const el = {
   breatheSub: $("#breatheSub"),
   streakBadge: $("#streakBadge"),
   psyMessage: $("#psyMessage"),
+  replayNote: $("#replayNote"),
   strictNote: $("#strictNote"),
   intentionBlock: $("#intentionBlock"),
   intentionChips: $("#intentionChips"),
@@ -306,6 +308,13 @@ async function init() {
   }
   const all = await getAllStats();
   el.psyMessage.textContent = pickMessage(messageContext(all, day, streak));
+
+  // Reason Replay: mirror the user's own last intention for this domain back.
+  const replay = replayLine(await getLastIntention(domain), medianSessionMin(all, domain));
+  if (replay) {
+    el.replayNote.textContent = replay;
+    el.replayNote.classList.remove("hidden");
+  }
 
   buddyMinutesToday = Math.round((day.time[domain] || 0) / 60);
   renderBuddy();

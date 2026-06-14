@@ -3,6 +3,7 @@
 
 export const SETTINGS_KEY = "sb_settings";
 export const STATS_KEY = "sb_stats";
+export const LASTINTENT_KEY = "sb_lastintent"; // domain -> { text, ts }
 
 // A "site" entry: domain + per-site limits. Feed toggles live under `feeds`.
 export const DEFAULTS = {
@@ -170,6 +171,27 @@ export async function mutateDay(fn) {
   while (keys.length > 60) delete all[keys.shift()];
   await chrome.storage.local.set({ [STATS_KEY]: all });
   return day;
+}
+
+// Reason Replay: remember the intention the user last typed for each domain so
+// the pause screen can mirror it back next time. Kept out of the day stats
+// (which prune at 60 days and reset daily) so the latest reason always survives.
+export async function getLastIntentions() {
+  const got = await chrome.storage.local.get(LASTINTENT_KEY);
+  return got[LASTINTENT_KEY] || {};
+}
+
+export async function getLastIntention(domain) {
+  const all = await getLastIntentions();
+  return all[domain] || null;
+}
+
+export async function setLastIntention(domain, text, ts = Date.now()) {
+  const t = (text || "").trim();
+  if (!domain || !t) return;
+  const all = await getLastIntentions();
+  all[domain] = { text: t, ts };
+  await chrome.storage.local.set({ [LASTINTENT_KEY]: all });
 }
 
 // host matches "instagram.com" if host === domain or ends with ".domain".

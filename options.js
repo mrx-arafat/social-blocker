@@ -12,6 +12,7 @@ import { applyTheme } from "./src/theme.js";
 import { renderMascot, DEFAULT_MASCOT_NAME } from "./src/mascot.js";
 import { phraseMatches, reenableAt } from "./src/disable-gate.js";
 import { buildCalendar } from "./src/calendar.js";
+import { peakHour, windowForHour, hasWindow } from "./src/insights.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
@@ -521,6 +522,32 @@ async function renderMonth() {
     cell.title = `${String(h).padStart(2, "0")}:00 — ${n} open${n === 1 ? "" : "s"}`;
     strip.appendChild(cell);
   });
+
+  setupGuardHour(hours);
+}
+
+// Turn the weakest hour into a one-click strict schedule window. Hidden until
+// there's enough signal, and once an equivalent window already exists.
+function setupGuardHour(hours) {
+  const btn = $("#guardHourBtn");
+  const hour = peakHour(hours);
+  const win = hour == null ? null : windowForHour(hour);
+  if (hour == null || hasWindow(settings.schedule.windows, win)) {
+    btn.classList.add("hidden");
+    return;
+  }
+  const label = `${String(hour).padStart(2, "0")}:00`;
+  btn.textContent = `Guard my weak hour (${label})`;
+  btn.classList.remove("hidden");
+  btn.onclick = async () => {
+    settings.schedule.windows.push(win);
+    settings.schedule.enabled = true;
+    await persist();
+    const en = $("#scheduleEnabled");
+    if (en) en.checked = true;
+    renderWindows();
+    btn.classList.add("hidden");
+  };
 }
 
 async function renderStats() {
