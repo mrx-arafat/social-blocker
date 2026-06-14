@@ -11,13 +11,13 @@
 }
 
 html[data-theme="dark"] {
-  --bg: #1b1b1b;
+  --bg: #1e1e1e;
   --ink: #f2f2f2;
-  --surface: #131313;
+  --surface: #141414;
   --line: #2c2c2c;
   --muted: #9a9a9a;
   --muted-2: #6b6b6b;
-  --on-ink: #131313;
+  --on-ink: #141414;
   --good: #4ac26b;
   --bad: #ff6f64;
 }
@@ -43,6 +43,7 @@ body {
 .hero {
   background: var(--bg); border: 1px solid var(--line); border-radius: 18px;
   padding: 32px 24px; text-align: center; margin-bottom: 16px;
+  box-shadow: var(--shadow);
 }
 .hero-num { font-size: 52px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
 .hero-label { color: var(--muted); font-size: 14px; margin-top: 8px; }
@@ -53,6 +54,7 @@ body {
 .card {
   background: var(--bg); border: 1px solid var(--line); border-radius: 18px;
   padding: 20px 22px; margin-bottom: 16px;
+  box-shadow: var(--shadow);
 }
 .card h2 { font-size: 15px; margin: 0 0 14px; }
 

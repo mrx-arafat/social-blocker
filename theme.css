@@ -1,0 +1,58 @@
+/* Shared polish layer — loaded BEFORE each page's own stylesheet so pages can
+   still override. Additive only: depth tokens, focus/selection, transitions and
+   a staggered entrance motion. Per-page colour tokens stay in their own files. */
+
+:root {
+  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.05), 0 1px 3px rgba(17, 17, 17, 0.04);
+  --shadow: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.07);
+  --shadow-pop: 0 10px 36px rgba(17, 17, 17, 0.16);
+}
+html[data-theme="dark"] {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Keyboard focus ring — consistent everywhere, never on mouse click. */
+:focus-visible {
+  outline: 2px solid var(--ink, #000);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+::selection { background: color-mix(in srgb, var(--ink, #000) 16%, transparent); }
+
+/* Smooth out the interactive bits without touching layout. */
+button, a, input, select, textarea, .chip, .tag, .feed-item, .site-row {
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+}
+
+/* Staggered fade-rise on first paint. Put .sb-stagger on a container; its direct
+   children reveal in sequence. Honours reduced-motion (no animation at all). */
+@keyframes sb-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sb-stagger > * { animation: sb-rise 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+  .sb-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .sb-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+  .sb-stagger > *:nth-child(3) { animation-delay: 0.10s; }
+  .sb-stagger > *:nth-child(4) { animation-delay: 0.14s; }
+  .sb-stagger > *:nth-child(5) { animation-delay: 0.18s; }
+  .sb-stagger > *:nth-child(6) { animation-delay: 0.22s; }
+  .sb-stagger > *:nth-child(7) { animation-delay: 0.26s; }
+  .sb-stagger > *:nth-child(8) { animation-delay: 0.30s; }
+  .sb-stagger > *:nth-child(n + 9) { animation-delay: 0.34s; }
+}
+
+/* Tidier scrollbar on the longer pages. */
+* { scrollbar-width: thin; scrollbar-color: var(--muted-2, #b1b1b1) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--muted-2, #b1b1b1); border-radius: 999px;
+  border: 3px solid transparent; background-clip: padding-box;
+}
+*::-webkit-scrollbar-track { background: transparent; }

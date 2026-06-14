@@ -4,17 +4,19 @@
   --surface: #f6f6f6;
   --line: #ebebeb;
   --muted: #8c8c8c;
+  --muted-2: #b1b1b1;
   --on-ink: #ffffff;
   --warn: #b3261e;
 }
 
 html[data-theme="dark"] {
-  --bg: #131313;
+  --bg: #141414;
   --ink: #f2f2f2;
   --surface: #1e1e1e;
   --line: #2c2c2c;
   --muted: #9a9a9a;
-  --on-ink: #131313;
+  --muted-2: #6b6b6b;
+  --on-ink: #141414;
   --warn: #ff6f64;
 }
 * { box-sizing: border-box; }
@@ -61,6 +63,7 @@ body {
 .stat {
   background: var(--surface); border-radius: 12px;
   padding: 12px 6px; text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 .stat-num { font-size: 22px; font-weight: 700; line-height: 1; }
 .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
@@ -89,6 +92,7 @@ body {
 .psy-card {
   background: var(--surface); border-radius: 12px;
   padding: 12px 8px; text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 .psy-num { font-size: 20px; font-weight: 700; line-height: 1.1; }
 .psy-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
