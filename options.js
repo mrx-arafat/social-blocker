@@ -11,6 +11,7 @@ import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
 import { renderMascot, DEFAULT_MASCOT_NAME } from "./src/mascot.js";
 import { phraseMatches, reenableAt } from "./src/disable-gate.js";
+import { buildCalendar } from "./src/calendar.js";
 
 const $ = (s) => document.querySelector(s);
 let settings;
@@ -565,6 +566,53 @@ async function renderStats() {
   });
 }
 
+// Calm calendar — GitHub-style heatmap of calm days over the last 12 weeks.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function calTooltip(cell) {
+  const d = new Date(cell.key + "T12:00:00");
+  const date = `${WEEKDAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  if (cell.state === "future") return date;
+  if (cell.state === "pretrack") return `${date} — before tracking`;
+  if (cell.opens === 0) return `${date} — no opens · calm`;
+  const calm = cell.level > 0 ? "calm" : "limit reached";
+  return `${date} — ${cell.opens} open${cell.opens === 1 ? "" : "s"} · ${cell.minutes}m · ${calm}`;
+}
+
+async function renderCalendar() {
+  const all = await getAllStats();
+  const cal = buildCalendar(all, settings, todayKey());
+
+  const grid = $("#calGrid");
+  grid.innerHTML = "";
+  cal.weeks.forEach((col) => {
+    const colEl = document.createElement("div");
+    colEl.className = "cal-col";
+    col.forEach((cell) => {
+      const box = document.createElement("div");
+      box.className = `cal-box cal-l${cell.level}` + (cell.state === "tracked" ? "" : ` cal-${cell.state}`);
+      box.title = calTooltip(cell);
+      colEl.appendChild(box);
+    });
+    grid.appendChild(colEl);
+  });
+
+  // Month labels: show a month name above the first column it appears in.
+  const months = $("#calMonths");
+  months.innerHTML = "";
+  // Seed with the first column's month so the partial leftmost month isn't
+  // labelled — avoids two month names crowding the start (GitHub does this).
+  let lastMonth = cal.weeks.length ? new Date(cal.weeks[0][0].key + "T12:00:00").getMonth() : -1;
+  cal.weeks.forEach((col) => {
+    const m = new Date(col[0].key + "T12:00:00").getMonth();
+    const lab = document.createElement("span");
+    lab.textContent = m !== lastMonth ? MONTHS[m] : "";
+    lastMonth = m;
+    months.appendChild(lab);
+  });
+}
+
 // ---- koala buddy --------------------------------------------------------------
 function bindMascot() {
   const preview = () =>
@@ -697,6 +745,7 @@ async function init() {
   await renderToday();
   await renderStats();
   await renderMonth();
+  await renderCalendar();
 }
 
 bindPhraseModal();

@@ -119,7 +119,8 @@ input[type="range"]::-webkit-slider-thumb {
 .site-row.off .dom { color: var(--muted-2); text-decoration: line-through; }
 .num-input {
   width: 100%; border: 1px solid var(--line); border-radius: 8px;
-  padding: 6px 8px; font-size: 13px; text-align: center; background: var(--bg);
+  padding: 6px 8px; font-size: 13px; text-align: center;
+  background: var(--bg); color: var(--ink);
 }
 .num-input:focus { outline: none; border-color: var(--ink); }
 .icon-btn {
@@ -226,6 +227,57 @@ input[type="range"]::-webkit-slider-thumb {
 .hour-cell {
   height: 26px; border-radius: 5px; background: var(--ink);
 }
+
+/* links — themed so they read in dark mode (was default browser blue) */
+a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--muted); }
+
+/* calm calendar (GitHub-style heatmap) */
+:root {
+  --cal-0: var(--line);
+  --cal-1: #9be9a8;
+  --cal-2: #40c463;
+  --cal-3: #30a14e;
+  --cal-4: #216e39;
+}
+html[data-theme="dark"] {
+  --cal-0: #232323;
+  --cal-1: #0e4429;
+  --cal-2: #006d32;
+  --cal-3: #26a641;
+  --cal-4: #39d353;
+}
+.cal { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.cal-weekdays {
+  display: flex; flex-direction: column; gap: 3px;
+  padding-top: 18px; /* clears the month-label row */
+  font-size: 9px; color: var(--muted);
+}
+.cal-weekdays span { height: 13px; line-height: 13px; }
+.cal-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cal-months {
+  display: flex; gap: 3px; height: 14px;
+  font-size: 10px; color: var(--muted);
+}
+.cal-months span { width: 13px; flex: none; white-space: nowrap; }
+.cal-grid { display: flex; gap: 3px; }
+.cal-col { display: flex; flex-direction: column; gap: 3px; }
+.cal-box {
+  width: 13px; height: 13px; border-radius: 3px; flex: none;
+  background: var(--cal-0);
+}
+.cal-l1 { background: var(--cal-1); }
+.cal-l2 { background: var(--cal-2); }
+.cal-l3 { background: var(--cal-3); }
+.cal-l4 { background: var(--cal-4); }
+.cal-future, .cal-pretrack { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.cal-legend {
+  display: flex; align-items: center; gap: 4px; justify-content: flex-end;
+  margin-top: 12px; font-size: 11px; color: var(--muted);
+}
+.cal-legend .cal-box { width: 11px; height: 11px; }
+.cal-legend span:first-child { margin-right: 2px; }
+.cal-legend span:last-child { margin-left: 2px; }
 
 /* v2: strict phrase modal */
 .modal {
