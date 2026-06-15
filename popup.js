@@ -1,4 +1,4 @@
-import { getSettings, saveSettings, getTodayStats } from "./src/storage.js";
+import { getSettings, saveSettings, getTodayStats, SETTINGS_KEY } from "./src/storage.js";
 import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
 import { pickMood, mascotLine, renderMascot } from "./src/mascot.js";
@@ -28,11 +28,67 @@ async function render() {
   $("#pStreak").textContent = streak ? `🔥 ${streak}` : "0";
   $("#pBest").textContent =
     settings.streak?.best > 1 ? `best: ${settings.streak.best}` : "";
+
+  // Week strip: 7 dots, the last `min(streak,7)` lit as calm days.
+  const week = $("#streakWeek");
+  if (week) {
+    week.innerHTML = "";
+    const lit = Math.min(streak, 7);
+    for (let i = 0; i < 7; i++) {
+      const dot = document.createElement("span");
+      dot.className = "streak-dot";
+      // Light the most recent `lit` days (right-aligned), mark the last as today.
+      if (i >= 7 - lit) dot.classList.add("on");
+      if (i === 6 && streak > 0) dot.classList.add("today");
+      week.appendChild(dot);
+    }
+  }
+
+  // Milestone progress bar inside streak card.
+  const milestones = [3, 7, 14, 21, 30, 60, 100];
+  const nextM = milestones.find((m) => m > streak) ?? Math.ceil((streak + 1) / 50) * 50;
+  const prevM = [...milestones].reverse().find((m) => m <= streak) ?? 0;
+  // Highest milestone actually reached (handles the 50-step tail past 100).
+  const reachedM = streak >= 100 ? Math.floor(streak / 50) * 50 : prevM;
+
+  // Celebrate a freshly-crossed milestone. First time the field is missing we
+  // migrate: existing users (who already have streak history) are seeded to
+  // their current milestone silently — no retroactive pop. Brand-new users seed
+  // to 0 so their first real milestone celebrates normally.
+  let seen = settings.streak?.lastCelebrated;
+  if (seen === undefined) {
+    const hadHistory = (settings.streak?.best || 0) > 0 || (settings.streak?.current || 0) > 0;
+    seen = hadHistory ? reachedM : 0;
+    settings.streak.lastCelebrated = seen;
+    await saveSettings(settings);
+  }
+  if (reachedM > seen) {
+    celebrateStreak(reachedM);
+    settings.streak.lastCelebrated = reachedM;
+    await saveSettings(settings);
+  }
+  const goalPct = streak === 0 ? 0 : Math.min(100, ((streak - prevM) / (nextM - prevM)) * 100);
+  const goalFill = $("#streakGoalFill");
+  if (goalFill) goalFill.style.width = goalPct + "%";
+  const goalLabel = $("#streakGoalLabel");
+  if (goalLabel) {
+    goalLabel.textContent = streak >= 100
+      ? "legendary — keep going 🏆"
+      : `${nextM - streak} day${nextM - streak === 1 ? "" : "s"} to ${nextM}-day goal`;
+  }
   const reclaimed = settings.reclaimedMin || 0;
-  $("#pReclaimed").textContent = fmtH(reclaimed);
-  // Jar fills over a soft 2h target — tangible, keeps growing visibly early on.
-  const jar = $("#jarFill");
-  if (jar) jar.style.width = Math.min(100, (reclaimed / 120) * 100) + "%";
+  const usedMin = settings.sites
+    .filter((s) => s.enabled)
+    .reduce((sum, s) => sum + Math.round((day.time[s.domain] || 0) / 60), 0);
+  const net = Math.max(0, reclaimed - usedMin);
+  $("#pReclaimed").textContent = fmtH(net);
+  setJarFill(Math.min(100, (net / 120) * 100));
+  const sub = $("#jarSub");
+  if (sub) {
+    sub.textContent = reclaimed > 0
+      ? `+${fmtH(reclaimed)} in · ${fmtH(usedMin)} out`
+      : "step away to fill the jar";
+  }
 
   $("#sAttempts").textContent = day.attempts;
   $("#sDismissed").textContent = day.dismissed;
@@ -207,6 +263,77 @@ $("#strictNow").addEventListener("click", async () => {
 
 $("#openOptions").addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
+});
+
+function setJarFill(pct) {
+  const liquid = $("#jarLiquid");
+  if (liquid) liquid.style.height = pct + "%";
+}
+
+// Milestone reached — flash a pill, fling confetti, bounce the streak number.
+function celebrateStreak(milestone) {
+  const host = $("#streakCelebrate");
+  if (!host) return;
+
+  const colors = ["#f97316", "#22c55e", "#fbbf24", "#3b82f6", "#ec4899"];
+  let pieces = "";
+  for (let i = 0; i < 10; i++) {
+    const angle = (Math.PI * 2 * i) / 10 + Math.random() * 0.5;
+    const dist = 26 + Math.random() * 18;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const rot = (Math.random() * 540 - 270) | 0;
+    const c = colors[i % colors.length];
+    pieces += `<span class="confetti" style="background:${c};--dx:${dx.toFixed(0)}px;--dy:${dy.toFixed(0)}px;--rot:${rot}deg"></span>`;
+  }
+  host.innerHTML =
+    pieces + `<div class="celebrate-pill">🎉 ${milestone}-day streak!</div>`;
+
+  host.classList.remove("show");
+  void host.getBoundingClientRect();
+  host.classList.add("show");
+
+  const num = $("#pStreak");
+  if (num) {
+    num.classList.remove("celebrate");
+    void num.getBoundingClientRect();
+    num.classList.add("celebrate");
+  }
+}
+
+function pourIntoJar(deltaMin) {
+  const pour = $("#jarPour");
+  const body = document.querySelector(".jar-outline");
+  const badge = $("#jarBadge");
+
+  if (pour) {
+    pour.classList.remove("pouring");
+    void pour.offsetWidth;
+    pour.classList.add("pouring");
+  }
+  if (body) {
+    body.classList.remove("pulse");
+    void body.getBoundingClientRect();
+    body.classList.add("pulse");
+  }
+  if (badge && deltaMin > 0) {
+    badge.textContent = `+${fmtH(deltaMin)}`;
+    badge.classList.remove("pop");
+    void badge.offsetWidth;
+    badge.classList.add("pop");
+  }
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes[SETTINGS_KEY]) return;
+  const prev = changes[SETTINGS_KEY].oldValue;
+  const next = changes[SETTINGS_KEY].newValue;
+  if (!prev || !next) return;
+  const delta = (next.reclaimedMin || 0) - (prev.reclaimedMin || 0);
+  if (delta > 0) {
+    pourIntoJar(delta);
+    render();
+  }
 });
 
 render();

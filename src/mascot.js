@@ -106,7 +106,7 @@ export function mascotLine(mood, ctx, rand = Math.random) {
 // Build the koala DOM inside `host`: <img> + name tag + optional bubble.
 // Pages pass their own relative icon base (""), the overlay passes
 // chrome.runtime.getURL("").
-export function renderMascot(host, { mood, line, name, iconBase = "" }) {
+export function renderMascot(host, { mood, line, name, iconBase = "", showName = true }) {
   host.innerHTML = "";
   host.classList.add("sb-mascot");
 
@@ -123,9 +123,11 @@ export function renderMascot(host, { mood, line, name, iconBase = "" }) {
   img.src = iconBase + MASCOT_ICONS[mood];
   host.appendChild(img);
 
-  const tag = document.createElement("div");
-  tag.className = "sb-mascot-name";
-  tag.textContent = name || DEFAULT_MASCOT_NAME;
-  host.appendChild(tag);
+  if (showName) {
+    const tag = document.createElement("div");
+    tag.className = "sb-mascot-name";
+    tag.textContent = name || DEFAULT_MASCOT_NAME;
+    host.appendChild(tag);
+  }
   return host;
 }

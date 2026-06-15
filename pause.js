@@ -113,7 +113,8 @@ function renderBuddy(over = {}) {
   renderMascot(host, {
     mood,
     line: mascotLine(mood, ctx),
-    name: settings.mascot.name
+    name: settings.mascot.name,
+    showName: false
   });
 }
 

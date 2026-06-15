@@ -22,15 +22,50 @@
     <div id="mascot"></div>
 
     <section class="psy-row">
-      <div class="psy-card">
-        <div class="psy-num" id="pStreak">0</div>
-        <div class="psy-label">calm-day streak</div>
-        <div class="psy-sub" id="pBest"></div>
+      <div class="psy-card streak-card">
+        <div class="streak-celebrate" id="streakCelebrate" aria-hidden="true"></div>
+        <div class="streak-top">
+          <div class="psy-num" id="pStreak">0</div>
+          <div class="psy-label">calm-day streak</div>
+          <div class="psy-sub" id="pBest"></div>
+        </div>
+        <div class="streak-week" id="streakWeek"></div>
+        <div class="streak-goal">
+          <div class="streak-goal-bar"><span id="streakGoalFill"></span></div>
+          <div class="streak-goal-label" id="streakGoalLabel"></div>
+        </div>
       </div>
       <div class="psy-card jar-card">
-        <div class="psy-num" id="pReclaimed">0m</div>
-        <div class="psy-label">🫙 in your time jar</div>
-        <div class="jar-fill"><span id="jarFill"></span></div>
+        <div class="jar-header">
+          <div class="psy-num" id="pReclaimed">0m</div>
+          <div class="jar-badge" id="jarBadge"></div>
+        </div>
+        <div class="psy-label">net time saved</div>
+        <div class="jar-visual">
+          <div class="jar-pour" id="jarPour"></div>
+          <div class="jar-clip">
+            <div class="jar-liquid" id="jarLiquid">
+              <div class="jar-wave"></div>
+            </div>
+          </div>
+          <svg class="jar-outline" viewBox="0 0 84 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- glass body (transparent interior — liquid shows from behind) -->
+            <path class="jar-glass"
+                  d="M22 18 L62 18 L62 28 Q78 34 78 46 L78 78 Q78 86 70 86 L14 86 Q6 86 6 78 L6 46 Q6 34 22 28 Z" />
+            <!-- glass shine -->
+            <path class="jar-shine" d="M13 50 Q11 64 13 80 L19 80 Q17 64 19 50 Z" />
+            <circle class="jar-shine" cx="16" cy="44" r="2.6" />
+            <!-- neck threads -->
+            <path class="jar-thread" d="M25 21 H59" />
+            <path class="jar-thread" d="M25 25 H59" />
+            <!-- screw-band lid -->
+            <path class="jar-lid" d="M17 4 L67 4 Q69 4 69 6 L69 17 Q69 19 67 19 L17 19 Q15 19 15 17 L15 6 Q15 4 17 4 Z" />
+            <line class="jar-lid-ridge" x1="18" y1="8.5" x2="66" y2="8.5" />
+            <line class="jar-lid-ridge" x1="18" y1="12" x2="66" y2="12" />
+            <line class="jar-lid-ridge" x1="18" y1="15.5" x2="66" y2="15.5" />
+          </svg>
+        </div>
+        <div class="jar-sub" id="jarSub"></div>
       </div>
     </section>
 
