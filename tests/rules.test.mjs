@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildRules, domainRegex } from "../src/rules.js";
+import { buildRules, domainRegex, ruleCovers } from "../src/rules.js";
 
 test("domainRegex matches host + subdomains, escapes dots", () => {
   const re = new RegExp(domainRegex("x.com"));
@@ -52,4 +52,17 @@ test("mode off or master disabled -> no rules", () => {
 test("strict mode still blocks (rules present)", () => {
   const s = { enabled: true, sites: [{ domain: "x.com", enabled: true }] };
   assert.equal(buildRules(s, "strict", {}, "ext://", 0).length, 1);
+});
+
+test("ruleCovers true when a session rule targets the domain", () => {
+  const s = { enabled: true, sites: [{ domain: "x.com", enabled: true }] };
+  const rules = buildRules(s, "normal", {}, "ext://", 0);
+  assert.equal(ruleCovers(rules, "x.com"), true);
+});
+
+test("ruleCovers false for uncovered domain or suppressed rule", () => {
+  const s = { enabled: true, sites: [{ domain: "x.com", enabled: true }] };
+  const rules = buildRules(s, "normal", { "x.com": 9e15 }, "ext://", 0); // live pass
+  assert.equal(ruleCovers(rules, "x.com"), false);
+  assert.equal(ruleCovers([], "y.com"), false);
 });

@@ -1,20 +1,33 @@
 {
   "manifest_version": 3,
-  "name": "Social Blocker",
+  "name": "Social Blocker — Mindful Pause for Social Media",
+  "short_name": "Social Blocker",
   "version": "2.0.0",
-  "description": "Pause before you scroll. A deep breath, an intention, and a moment of choice before opening distracting sites.",
+  "description": "A mindful pause before distracting sites: breathe, set an intention, then choose. Daily limits, schedules & feed hiding, all local.",
+  "homepage_url": "https://github.com/mrx-arafat/social-blocker",
+  "minimum_chrome_version": "102",
   "permissions": [
     "storage",
     "webNavigation",
-    "tabs",
     "alarms",
     "notifications",
     "idle",
-    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
     "scripting"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "*://*.instagram.com/*",
+    "*://*.facebook.com/*",
+    "*://*.tiktok.com/*",
+    "*://*.twitter.com/*",
+    "*://*.x.com/*",
+    "*://*.youtube.com/*",
+    "*://*.reddit.com/*",
+    "*://*.snapchat.com/*",
+    "*://*.linkedin.com/*"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
   ],
   "background": {
     "service_worker": "background.js",

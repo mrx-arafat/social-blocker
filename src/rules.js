@@ -7,6 +7,14 @@ export function domainRegex(domain) {
   return `^https?://([^/]*\\.)?${esc}(/.*)?$`;
 }
 
+// True when an installed rule set already redirects this domain — used by the
+// webNavigation fallback to stand down (the browser handled the redirect), so
+// the pause page never double-loads and attempts aren't counted twice.
+export function ruleCovers(rules, domain) {
+  const filter = domainRegex(domain);
+  return rules.some((r) => r.condition && r.condition.regexFilter === filter);
+}
+
 // passes: {domain: expiryMs}. extOrigin: chrome.runtime.getURL("").
 // The original URL rides as the LAST query param (it contains & and ?);
 // pause.js parses it raw rather than via URLSearchParams.

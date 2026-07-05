@@ -8,7 +8,7 @@ A Chrome (Manifest V3) extension that puts a conscious breath, an intention, and
 a real choice between you and distracting websites — instead of a brittle wall
 you'll just fight or switch off.
 
-`MV3` · `vanilla JS, no build step` · `100% local, no tracking` · `85 tests` · `MIT`
+`MV3` · `vanilla JS, no build step` · `100% local, no tracking` · `89 tests` · `MIT`
 
 </div>
 
@@ -258,14 +258,17 @@ tested in Node with an in-memory `chrome.*` mock.
 | Permission | Why it's needed |
 |------------|-----------------|
 | `storage` | Save settings and stats locally |
-| `declarativeNetRequest` | Redirect guarded sites to the pause screen before they load |
+| `declarativeNetRequestWithHostAccess` | Redirect guarded sites to the pause screen before they load (only acts on sites you granted access to) |
 | `webNavigation` | Fallback detection + single interruption-counting point |
-| `tabs` | Redirect the tab to the pause / limit screen |
-| `scripting` | Inject the koala overlay on guarded sites you add yourself |
+| `scripting` | Inject the koala overlay on guarded sites |
 | `alarms` | Minute timer (time limits, streak roll) and reminders |
 | `notifications` | Reminder nudges and the weekly recap |
 | `idle` | Don't count time-on-site while you're away |
-| `<all_urls>` | Match any site you add to your guarded list |
+| Host access (default sites) | The nine built-in social domains, declared in the manifest |
+| Host access (optional) | Asked at runtime only when *you* add a custom site — deny it and the site is still guarded via the fallback path |
+
+There is **no** `tabs` permission and **no** blanket `<all_urls>` grant: the
+extension can only touch the sites on your guarded list.
 
 ---
 
@@ -317,7 +320,7 @@ social-blocker/
 
 No build, no dependencies — edit and reload the unpacked extension.
 
-**Run the test suite** (85 tests, Node's built-in runner — no install needed):
+**Run the test suite** (89 tests, Node's built-in runner — no install needed):
 
 ```bash
 node --test tests/*.mjs

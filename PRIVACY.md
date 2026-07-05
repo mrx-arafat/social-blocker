@@ -24,10 +24,18 @@ extension.
 
 ## Why the permissions are needed
 
-- **webNavigation / tabs** — to detect when you open a guarded site and redirect
+- **webNavigation** — to detect when you open a guarded site and redirect
   that tab to the breathing/pause screen.
-- **host access (all sites)** — so you can add *any* website to your own guarded
-  list; the extension only acts on sites you choose.
+- **declarativeNetRequestWithHostAccess** — so the browser itself redirects
+  guarded sites to the pause screen before they load; it can only act on sites
+  you have granted access to.
+- **scripting** — to show the optional koala overlay on guarded sites.
+- **host access (default sites)** — the built-in social domains (Instagram,
+  Facebook, TikTok, X/Twitter, YouTube, Reddit, Snapchat, LinkedIn) are
+  declared up front.
+- **host access (optional, runtime)** — requested only when *you* add a custom
+  website to your guarded list, and only for that website. If you decline, the
+  site is still guarded through a fallback path.
 - **storage** — to save your settings and local stats on your device.
 - **alarms / idle** — to measure time-on-site (paused while you're away) and to
   send optional reminders.

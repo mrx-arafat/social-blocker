@@ -13,9 +13,10 @@ import {
   todayKey
 } from "./src/storage.js";
 import { resolveMode } from "./src/schedule.js";
-import { buildRules } from "./src/rules.js";
+import { buildRules, ruleCovers } from "./src/rules.js";
 import { rollStreak, medianSessionMin, prevDate } from "./src/streak.js";
 import { shouldAutoReenable } from "./src/disable-gate.js";
+import { originPatternFor } from "./src/permissions.js";
 
 // Decide why a guarded visit should be stopped, given today's stats.
 // Returns a reason ("openLimit" | "timeLimit") + limit, or null for a normal pause.
@@ -129,6 +130,21 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 
   // Already holding a pass for this domain? Let it through.
   if (await hasValidPass(site.domain)) return;
+
+  // If a session rule covers this domain AND we hold host access for it, the
+  // browser already redirected the request (flash-free). Firing tabs.update
+  // here too would load the pause page a second time and double-count the
+  // attempt — stand down. Without host access the rule is inert (redirect
+  // actions need host permissions), so the fallback must keep guarding.
+  try {
+    const [rules, granted] = await Promise.all([
+      chrome.declarativeNetRequest.getSessionRules(),
+      chrome.permissions.contains({ origins: [originPatternFor(site.domain)] })
+    ]);
+    if (granted && ruleCovers(rules, site.domain)) return;
+  } catch {
+    /* DNR unavailable — proceed with the fallback redirect */
+  }
 
   // Redirect to the pause screen. Attempt counting and limit resolution live
   // in pause.js (single counting point for both the DNR and this fallback
@@ -411,6 +427,11 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     priority: 1
   });
 });
+
+// Host-permission grants land after the site row is saved (the options page
+// requests them on add); re-sync so DNR rules attach as soon as access exists.
+chrome.permissions.onAdded.addListener(() => syncRules());
+chrome.permissions.onRemoved.addListener(() => syncRules());
 
 // React to settings changes (reminder cadence, sites, schedule, master toggle).
 chrome.storage.onChanged.addListener((changes, area) => {

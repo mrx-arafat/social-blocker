@@ -11,6 +11,7 @@ import { strictActive } from "./src/schedule.js";
 import { applyTheme } from "./src/theme.js";
 import { renderMascot, DEFAULT_MASCOT_NAME } from "./src/mascot.js";
 import { phraseMatches, reenableAt } from "./src/disable-gate.js";
+import { requestSiteAccess, releaseSiteAccess } from "./src/permissions.js";
 import { buildCalendar } from "./src/calendar.js";
 import { peakHour, windowForHour, hasWindow } from "./src/insights.js";
 
@@ -158,7 +159,9 @@ function renderSites() {
     rm.title = "Remove";
     rm.addEventListener("click", () => {
       guardStrict(() => {
+        const removed = settings.sites[i];
         settings.sites.splice(i, 1);
+        if (removed) releaseSiteAccess(removed.domain);
         persist();
         renderSites();
       });
@@ -190,10 +193,15 @@ $("#addSiteForm").addEventListener("submit", (e) => {
     input.value = "";
     return;
   }
-  settings.sites.push({ domain, enabled: true, openLimit: 0, timeLimitMin: 0 });
-  input.value = "";
-  persist();
-  renderSites();
+  // Ask for host access first, while the submit gesture is still live. The
+  // site is guarded either way (webNavigation fallback); the grant only adds
+  // the flash-free redirect + mascot overlay.
+  requestSiteAccess(domain).finally(() => {
+    settings.sites.push({ domain, enabled: true, openLimit: 0, timeLimitMin: 0 });
+    input.value = "";
+    persist();
+    renderSites();
+  });
 });
 
 // ---- feeds ------------------------------------------------------------------
